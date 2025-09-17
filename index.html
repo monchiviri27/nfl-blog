@@ -97,36 +97,77 @@
     <!-- Barra de progreso de lectura -->
     <div class="reading-progress" id="reading-progress"></div>
 
-    <!-- Navegación fija -->
-    <nav class="fixed w-full bg-white/90 dark:bg-neutral-850/90 backdrop-blur-sm py-4 z-50 border-b border-gray-200 dark:border-neutral-700 shadow-sm">
-        <div class="container mx-auto px-4 flex justify-between items-center">
-            <a href="index.html" class="text-2xl font-bold text-nfl-blue dark:text-white flex items-center">
-                <i class="fas fa-football mr-2"></i>NFL Blog
-            </a>
-            
-            <div class="flex items-center space-x-6">
-                <a href="#inicio" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Inicio</a>
-                <a href="equipos/equipos-nfl.html#equipos" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Equipos</a>
-                <a href="articulos/articulos.html#articulos" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Artículos</a>
-                <a href="estadisticas.html" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Estadísticas</a>
-                 <a href="temporada/calendario-resultados.html#estadisticas" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Calendario</a>
-                
-                <!-- Selector de tema -->
-                <div class="flex items-center space-x-2">
-                    <span x-show="!isDark"><i class="fas fa-sun text-yellow-500"></i></span>
-                    <span x-show="isDark"><i class="fas fa-moon text-blue-300"></i></span>
-                    
-                    <button 
-                        @click="toggleTheme()"
-                        :aria-label="isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
-                        class="w-12 h-6 bg-gray-300 dark:bg-nfl-blue rounded-full p-1 relative focus:outline-none focus:ring-2 focus:ring-nfl-blue"
-                    >
-                        <span class="w-4 h-4 bg-white dark:bg-gray-200 rounded-full shadow-md block transform transition-transform duration-300" :class="{'translate-x-6': isDark}"></span>
-                    </button>
-                </div>
+   <nav class="fixed w-full bg-white/90 dark:bg-neutral-850/90 backdrop-blur-sm py-4 z-50 border-b border-gray-200 dark:border-neutral-700 shadow-sm">
+    <div class="container mx-auto px-4 flex justify-between items-center relative">
+        <a href="index.html" class="text-2xl font-bold text-nfl-blue dark:text-white flex items-center">
+            <i class="fas fa-football mr-2"></i>NFL Blog
+        </a>
+        
+        <div class="hidden md:flex items-center space-x-6">
+            <a href="#inicio" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Inicio</a>
+            <a href="equipos/equipos-nfl.html#equipos" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Equipos</a>
+            <a href="articulos/articulos.html#articulos" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Artículos</a>
+            <a href="estadisticas.html" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Estadísticas</a>
+            <a href="temporada/calendario-resultados.html#estadisticas" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Calendario</a>
+
+            <div class="flex items-center space-x-2">
+                <span x-show="!isDark"><i class="fas fa-sun text-yellow-500"></i></span>
+                <span x-show="isDark"><i class="fas fa-moon text-blue-300"></i></span>
+                <button 
+                    @click="toggleTheme()"
+                    :aria-label="isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+                    class="w-12 h-6 bg-gray-300 dark:bg-neutral-700 rounded-full p-1 relative focus:outline-none focus:ring-2 focus:ring-nfl-blue"
+                >
+                    <span class="w-4 h-4 bg-white dark:bg-gray-200 rounded-full shadow-md block transform transition-transform duration-300" :class="{'translate-x-6': isDark}"></span>
+                </button>
             </div>
         </div>
-    </nav>
+
+        <div class="flex items-center space-x-4 md:hidden">
+            <div class="flex items-center space-x-2">
+                <span x-show="!isDark"><i class="fas fa-sun text-yellow-500"></i></span>
+                <span x-show="isDark"><i class="fas fa-moon text-blue-300"></i></span>
+                <button 
+                    @click="toggleTheme()"
+                    :aria-label="isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+                    class="w-12 h-6 bg-gray-300 dark:bg-neutral-700 rounded-full p-1 relative focus:outline-none focus:ring-2 focus:ring-nfl-blue"
+                >
+                    <span class="w-4 h-4 bg-white dark:bg-gray-200 rounded-full shadow-md block transform transition-transform duration-300" :class="{'translate-x-6': isDark}"></span>
+                </button>
+            </div>
+            
+            <button 
+                @click="isMenuOpen = !isMenuOpen" 
+                class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-nfl-blue"
+            >
+                <svg x-show="!isMenuOpen" class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+                </svg>
+                <svg x-show="isMenuOpen" x-cloak class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <div 
+            x-show="isMenuOpen" 
+            x-cloak 
+            x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0 -translate-y-4"
+            x-transition:enter-end="opacity-100 translate-y-0"
+            x-transition:leave="transition ease-in duration-300"
+            x-transition:leave-start="opacity-100 translate-y-0"
+            x-transition:leave-end="opacity-0 -translate-y-4"
+            class="md:hidden absolute top-20 left-0 w-full bg-white dark:bg-neutral-850 shadow-xl py-4 border-b border-gray-200 dark:border-neutral-700"
+        >
+            <a href="#inicio" @click="isMenuOpen = false" class="block px-8 py-3 text-gray-600 hover:bg-gray-100 dark:hover:bg-neutral-700 dark:text-gray-300 dark:hover:text-white font-semibold">Inicio</a>
+            <a href="equipos/equipos-nfl.html#equipos" @click="isMenuOpen = false" class="block px-8 py-3 text-gray-600 hover:bg-gray-100 dark:hover:bg-neutral-700 dark:text-gray-300 dark:hover:text-white font-semibold">Equipos</a>
+            <a href="articulos/articulos.html#articulos" @click="isMenuOpen = false" class="block px-8 py-3 text-gray-600 hover:bg-gray-100 dark:hover:bg-neutral-700 dark:text-gray-300 dark:hover:text-white font-semibold">Artículos</a>
+            <a href="estadisticas.html" @click="isMenuOpen = false" class="block px-8 py-3 text-gray-600 hover:bg-gray-100 dark:hover:bg-neutral-700 dark:text-gray-300 dark:hover:text-white font-semibold">Estadísticas</a>
+            <a href="temporada/calendario-resultados.html#estadisticas" @click="isMenuOpen = false" class="block px-8 py-3 text-gray-600 hover:bg-gray-100 dark:hover:bg-neutral-700 dark:text-gray-300 dark:hover:text-white font-semibold">Calendario</a>
+        </div>
+    </div>
+</nav>
 
     <!-- Espacio para la navegación fija -->
     <div class="h-20"></div>
@@ -475,6 +516,7 @@
         function themeHandler() {
             return {
                 isDark: false,
+                isMenuOpen: false, //  <--  Agrega esta línea
                 init() {
                     // Obtener el tema guardado o detectar la preferencia del sistema
                     const savedTheme = localStorage.getItem('theme');
