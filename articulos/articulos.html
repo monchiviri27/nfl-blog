@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Artículos NFL | NFL Blog</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        nfl: {
+                            blue: '#013369',
+                            red: '#D50A0A',
+                            silver: '#A5ACAF'
+                        },
+                        neutral: {
+                            850: '#1e1e1e',
+                            950: '#0f0f0f'
+                        }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- favicon -->
+    <link rel="icon" href="../favicon.png" type="image/x-icon">
+    <link rel="shortcut icon" href="../favicon.png" type="image/x-icon">
+    <style>
+        .article-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .article-card:hover {
+            transform: translateY(-5px);
+        }
+        .category-filter {
+            transition: all 0.3s ease;
+        }
+        .category-filter.active {
+            background: linear-gradient(135deg, #013369 0%, #D50A0A 100%);
+            color: white;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #013369 0%, #D50A0A 100%);
+        }
+        .prose {
+            max-width: none;
+        }
+        .prose h2 {
+            font-weight: 700;
+            font-size: 1.5em;
+            margin-top: 2em;
+            margin-bottom: 1em;
+            color: #013369;
+        }
+        .dark .prose h2 {
+            color: #D50A0A;
+        }
+        .prose p {
+            margin-bottom: 1.25em;
+            line-height: 1.7;
+        }
+        .theme-transition * {
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+        .reading-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 4px;
+            background: linear-gradient(90deg, #013369, #D50A0A);
+            z-index: 9999;
+        }
+        .author-card {
+            transition: all 0.3s ease;
+        }
+        .author-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .dark .author-card:hover {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+        }
+        .pagination-btn {
+            transition: all 0.3s ease;
+        }
+        .pagination-btn:hover:not(.disabled) {
+            background: linear-gradient(135deg, #013369 0%, #D50A0A 100%);
+            color: white;
+        }
+        .article-image {
+            transition: transform 0.5s ease;
+        }
+        .article-card:hover .article-image {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body x-data="articlesPage()" x-bind:class="{'dark': isDark}" class="theme-transition bg-white dark:bg-neutral-950 text-gray-800 dark:text-gray-200 min-h-screen">
+    <!-- Barra de progreso de lectura -->
+    <div class="reading-progress" id="reading-progress"></div>
+
+    <!-- Navegación fija -->
+    <nav class="fixed w-full bg-white/90 dark:bg-neutral-850/90 backdrop-blur-sm py-4 z-50 border-b border-gray-200 dark:border-neutral-700 shadow-sm">
+        <div class="container mx-auto px-4 flex justify-between items-center">
+            <a href="index.html" class="text-2xl font-bold text-nfl-blue dark:text-white flex items-center">
+                <i class="fas fa-football mr-2"></i>NFL Blog
+            </a>
+            
+            <div class="flex items-center space-x-6">
+                <a href="../index.html#inicio" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Inicio</a>
+                <a href="../equipos/equipos-nfl.html" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Equipos</a>
+                <a href="../estadisticas.html" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Estadísticas</a>
+                <a href="articulos.html" class="text-nfl-blue dark:text-nfl-red font-medium">Artículos</a>
+                <a href="../temporada/calendario-resultados.html" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Calendario</a>
+                
+                <!-- Selector de tema -->
+                <div class="flex items-center space-x-2">
+                    <span x-show="!isDark"><i class="fas fa-sun text-yellow-500"></i></span>
+                    <span x-show="isDark"><i class="fas fa-moon text-blue-300"></i></span>
+                    
+                    <button 
+                        @click="toggleTheme()"
+                        :aria-label="isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+                        class="w-12 h-6 bg-gray-300 dark:bg-nfl-blue rounded-full p-1 relative focus:outline-none focus:ring-2 focus:ring-nfl-blue"
+                    >
+                        <span class="w-4 h-4 bg-white dark:bg-gray-200 rounded-full shadow-md block transform transition-transform duration-300" :class="{'translate-x-6': isDark}"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Espacio para la navegación fija -->
+    <div class="h-20"></div>
+
+    <!-- Contenido principal -->
+    <main class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Encabezado de la página -->
+        <div class="mb-12 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold text-nfl-blue dark:text-nfl-red mb-4">Artículos NFL</h1>
+            <p class="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+                Análisis en profundidad, opiniones expertas y las últimas noticias de la National Football League.
+            </p>
+        </div>
+
+        <!-- Filtros de categorías -->
+        <div class="mb-10 bg-white dark:bg-neutral-850 rounded-xl shadow-md p-4 sticky top-20 z-10">
+            <h2 class="text-lg font-semibold mb-3 text-nfl-blue dark:text-nfl-red">Filtrar por categoría</h2>
+            <div class="flex flex-wrap gap-2">
+                <button 
+                    @click="selectedCategory = 'all'" 
+                    :class="{'active': selectedCategory === 'all'}"
+                    class="category-filter px-4 py-2 rounded-lg bg-gray-100 dark:bg-neutral-800 hover:bg-gray-200 dark:hover:bg-neutral-700"
+                >
+                    Todos
+                </button>
+                <button 
+                    @click="selectedCategory = 'analisis'" 
+                    :class="{'active': selectedCategory === 'analisis'}"
+                    class="category-filter px-4 py-2 rounded-lg bg-gray-100 dark:bg-neutral-800 hover:bg-gray-200 dark:hover:bg-neutral-700"
+                >
+                    Análisis
+                </button>
+                <button 
+                    @click="selectedCategory = 'noticias'" 
+                    :class="{'active': selectedCategory === 'noticias'}"
+                    class="category-filter px-4 py-2 rounded-lg bg-gray-100 dark:bg-neutral-800 hover:bg-gray-200 dark:hover:bg-neutral-700"
+                >
+                    Noticias
+                </button>
+                <button 
+                    @click="selectedCategory = 'opinion'" 
+                    :class="{'active': selectedCategory === 'opinion'}"
+                    class="category-filter px-4 py-2 rounded-lg bg-gray-100 dark:bg-neutral-800 hover:bg-gray-200 dark:hover:bg-neutral-700"
+                >
+                    Opinión
+                </button>
+                <button 
+                    @click="selectedCategory = 'fantasy'" 
+                    :class="{'active': selectedCategory === 'fantasy'}"
+                    class="category-filter px-4 py-2 rounded-lg bg-gray-100 dark:bg-neutral-800 hover:bg-gray-200 dark:hover:bg-neutral-700"
+                >
+                    Fantasy
+                </button>
+                <button 
+                    @click="selectedCategory = 'historia'" 
+                    :class="{'active': selectedCategory === 'historia'}"
+                    class="category-filter px-4 py-2 rounded-lg bg-gray-100 dark:bg-neutral-800 hover:bg-gray-200 dark:hover:bg-neutral-700"
+                >
+                    Historia
+                </button>
+            </div>
+        </div>
+
+        <!-- Artículos Destacados -->
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-nfl-blue dark:text-nfl-red">Artículos Destacados</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+                <div class="article-card bg-white dark:bg-neutral-850 rounded-xl overflow-hidden shadow-md border border-gray-100 dark:border-neutral-700">
+                    <div class="relative overflow-hidden">
+                        <img src="/Users/andreabazurto6/Desktop/apps_portafolio/blogs/nfl_blog/assets/images/nfl13.png" 
+                             alt="Patrick Mahomes" class="article-image w-full h-48 object-cover">
+                        <span class="absolute top-4 left-4 text-xs font-semibold bg-nfl-blue text-white px-2 py-1 rounded">Análisis</span>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-sm text-gray-500 dark:text-gray-400">12 Sept 2023</span>
+                            <span class="text-xs text-gray-500 dark:text-gray-400">8 min lectura</span>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3">Patrick Mahomes: ¿El mejor QB de la década?</h3>
+                        <p class="text-gray-600 dark:text-gray-300 mb-4">
+                            Analizamos el impacto de Mahomes en la liga y su legado en comparación con otras leyendas del quarterback.
+                        </p>
+                        <a href="mahomes-mejor-qb-decada.html" class="inline-flex items-center text-nfl-blue dark:text-nfl-red hover:underline font-medium">
+                            Leer más
+                            <svg class="w-4 h-4 ml-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="article-card bg-white dark:bg-neutral-850 rounded-xl overflow-hidden shadow-md border border-gray-100 dark:border-neutral-700">
+                    <div class="relative overflow-hidden">
+                        <img src="/Users/andreabazurto6/Desktop/apps_portafolio/blogs/nfl_blog/assets/images/nfl7.webp" 
+                             alt="Salarios NFL" class="article-image w-full h-48 object-cover">
+                        <span class="absolute top-4 left-4 text-xs font-semibold bg-nfl-red text-white px-2 py-1 rounded">Noticias</span>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-sm text-gray-500 dark:text-gray-400">5 Sept 2023</span>
+                            <span class="text-xs text-gray-500 dark:text-gray-400">6 min lectura</span>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3">Los salarios más altos de la NFL en 2023</h3>
+                        <p class="text-gray-600 dark:text-gray-300 mb-4">
+                            Descubre qué jugadores lideran la lista de ingresos y cómo afecta a los límites salariales.
+                        </p>
+                        <a href="salarios-nfl-2023.html" class="inline-flex items-center text-nfl-blue dark:text-nfl-red hover:underline font-medium">
+                            Leer más
+                            <svg class="w-4 h-4 ml-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Lista de Artículos -->
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-nfl-blue dark:text-nfl-red">Todos los Artículos</h2>
+            
+            <div class="grid grid-cols-1 gap-8">
+                <template x-for="article in filteredArticles" :key="article.id">
+                    <div class="article-card bg-white dark:bg-neutral-850 rounded-xl overflow-hidden shadow-md border border-gray-100 dark:border-neutral-700">
+                        <div class="flex flex-col md:flex-row">
+                            <div class="md:w-1/3 relative">
+                                <img :src="article.image" :alt="article.title" class="article-image w-full h-48 md:h-full object-cover">
+                                <span class="absolute top-4 left-4 text-xs font-semibold px-2 py-1 rounded" 
+                                      :class="{
+                                          'bg-nfl-blue text-white': article.category === 'analisis',
+                                          'bg-nfl-red text-white': article.category === 'noticias',
+                                          'bg-yellow-500 text-black': article.category === 'opinion',
+                                          'bg-green-500 text-white': article.category === 'fantasy',
+                                          'bg-purple-500 text-white': article.category === 'historia'
+                                      }" 
+                                      x-text="article.category === 'analisis' ? 'Análisis' : 
+                                              article.category === 'noticias' ? 'Noticias' : 
+                                              article.category === 'opinion' ? 'Opinión' : 
+                                              article.category === 'fantasy' ? 'Fantasy' : 'Historia'">
+                                </span>
+                            </div>
+                            <div class="md:w-2/3 p-6">
+                                <div class="flex justify-between items-center mb-3">
+                                    <span class="text-sm text-gray-500 dark:text-gray-400" x-text="article.date"></span>
+                                    <span class="text-xs text-gray-500 dark:text-gray-400" x-text="article.readTime + ' min lectura'"></span>
+                                </div>
+                                <h3 class="text-xl font-bold mb-3" x-text="article.title"></h3>
+                                <p class="text-gray-600 dark:text-gray-300 mb-4" x-text="article.excerpt"></p>
+                                <div class="flex justify-between items-center">
+                                    <a :href="article.link" class="inline-flex items-center text-nfl-blue dark:text-nfl-red hover:underline font-medium">
+                                        Leer más
+                                        <svg class="w-4 h-4 ml-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                            <path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                                        </svg>
+                                    </a>
+                                    <div class="flex items-center">
+                                        <div class="w-8 h-8 rounded-full bg-gray-200 dark:bg-neutral-800 flex items-center justify-center text-sm font-semibold" x-text="article.authorInitials"></div>
+                                        <span class="ml-2 text-sm text-gray-500 dark:text-gray-400" x-text="article.author"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Paginación -->
+            <div class="mt-12 flex justify-center">
+                <div class="flex space-x-2">
+                    <button class="pagination-btn w-10 h-10 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed" :disabled="currentPage === 1" @click="currentPage--">
+                        &laquo;
+                    </button>
+                    <template x-for="page in totalPages" :key="page">
+                        <button 
+                            @click="currentPage = page" 
+                            class="pagination-btn w-10 h-10 rounded-full flex items-center justify-center" 
+                            :class="{'bg-nfl-blue text-white': currentPage === page, 'bg-gray-100 dark:bg-neutral-800': currentPage !== page}"
+                            x-text="page"
+                        ></button>
+                    </template>
+                    <button class="pagination-btn w-10 h-10 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed" :disabled="currentPage === totalPages" @click="currentPage++">
+                        &raquo;
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Autores Destacados -->
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-nfl-blue dark:text-nfl-red">Nuestros Analistas</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="author-card bg-white dark:bg-neutral-850 p-6 rounded-xl shadow-md border border-gray-100 dark:border-neutral-700 text-center">
+                    <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-nfl-blue text-white flex items-center justify-center text-2xl font-bold">CR</div>
+                    <h3 class="text-xl font-semibold mb-2">Carlos Rodríguez</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Analista Senior - Especialista en NFC</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">15 años cubriendo la NFL. Antiguo jugador universitario.</p>
+                </div>
+
+                <div class="author-card bg-white dark:bg-neutral-850 p-6 rounded-xl shadow-md border border-gray-100 dark:border-neutral-700 text-center">
+                    <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-nfl-red text-white flex items-center justify-center text-2xl font-bold">MG</div>
+                    <h3 class="text-xl font-semibold mb-2">Marta González</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Corresponsal - Experta en Fantasy Football</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Campeona de Fantasy Football 3 años consecutivos en su liga.</p>
+                </div>
+
+                <div class="author-card bg-white dark:bg-neutral-850 p-6 rounded-xl shadow-md border border-gray-100 dark:border-neutral-700 text-center">
+                    <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-gray-600 text-white flex items-center justify-center text-2xl font-bold">AS</div>
+                    <h3 class="text-xl font-semibold mb-2">Antonio Sánchez</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Editor Deportivo - Historiador de la NFL</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Autor de 2 libros sobre la historia del fútbol americano.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Newsletter -->
+        <section class="mb-16">
+            <div class="gradient-bg rounded-2xl p-8 text-center text-white shadow-xl">
+                <h2 class="text-2xl font-bold mb-4">¡No te pierdas ningún artículo!</h2>
+                <p class="mb-6 max-w-2xl mx-auto">Suscríbete a nuestro newsletter y recibe los artículos más interesantes de la NFL directamente en tu correo.</p>
+                <div class="flex flex-col sm:flex-row max-w-md mx-auto gap-2">
+                    <input type="email" placeholder="Tu correo electrónico" class="flex-grow px-4 py-2 rounded-full text-gray-900 focus:outline-none focus:ring-2 focus:ring-white">
+                    <button class="bg-white text-nfl-blue font-bold px-6 py-2 rounded-full hover:bg-gray-100 transition">Suscribirme</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-100 dark:bg-neutral-850 border-t border-gray-200 dark:border-neutral-700 py-12 mt-16">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center">
+                        <i class="fas fa-football mr-2 text-nfl-blue dark:text-nfl-red"></i>NFL Blog
+                    </h3>
+                    <p class="text-gray-600 dark:text-gray-300 text-sm">
+                        Tu fuente confiable de noticias, análisis y estadísticas de la National Football League.
+                    </p>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Secciones</h4>
+                    <ul class="space-y-2">
+                        <li><a href="index.html#inicio" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Inicio</a></li>
+                        <li><a href="equipos-nfl.html" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Equipos</a></li>
+                        <li><a href="jugadores-destacados.html" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Jugadores</a></li>
+                        <li><a href="articulos.html" class="text-nfl-blue dark:text-nfl-red text-sm">Artículos</a></li>
+                        <li><a href="calendario-resultados.html" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Calendario</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Categorías</h4>
+                    <ul class="space-y-2">
+                        <li><a href="articulos.html" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Análisis</a></li>
+                        <li><a href="articulos.html" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Noticias</a></li>
+                        <li><a href="articulos.html" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Opinión</a></li>
+                        <li><a href="fantasy-football-guia.html" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Fantasy Football</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Síguenos</h4>
+                    <div class="flex space-x-4 mb-6">
+                        <a href="#" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-nfl-red">
+                            <i class="fab fa-twitter text-lg"></i>
+                        </a>
+                        <a href="#" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-nfl-red">
+                            <i class="fab fa-facebook text-lg"></i>
+                        </a>
+                        <a href="#" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-nfl-red">
+                            <i class="fab fa-instagram text-lg"></i>
+                        </a>
+                        <a href="#" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-nfl-red">
+                            <i class="fab fa-youtube text-lg"></i>
+                        </a>
+                    </div>
+                    
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">Newsletter</h4>
+                    <div class="flex">
+                        <input type="email" placeholder="Tu email" class="px-3 py-2 border border-gray-300 dark:border-neutral-700 rounded-l text-sm w-full dark:bg-neutral-800">
+                        <button class="bg-nfl-blue text-white px-3 py-2 rounded-r text-sm">Suscribir</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-8 text-center text-gray-500 dark:text-gray-400 text-sm">
+                <p>© 2023 NFL Blog. Este sitio no está afiliado oficialmente con la NFL. Todas las marcas registradas son propiedad de sus respectivos dueños.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Función para gestionar la página de artículos
+        function articlesPage() {
+            return {
+                isDark: false,
+                selectedCategory: 'all',
+                currentPage: 1,
+                articlesPerPage: 5,
+                articles: [
+                    {
+                        id: 1,
+                        title: 'Patrick Mahomes: ¿El mejor QB de la década?',
+                        category: 'analisis',
+                        date: '12 Sept 2023',
+                        readTime: 8,
+                        excerpt: 'Analizamos el impacto de Mahomes en la liga y su legado en comparación con otras leyendas del quarterback.',
+                        image: '/Users/andreabazurto6/Desktop/apps_portafolio/blogs/nfl_blog/assets/images/nfl13.png',
+                        author: 'Carlos Rodríguez',
+                        authorInitials: 'CR',
+                        link: 'patrick-mahomes-mejor-qb.html'
+                    },
+                    {
+                        id: 2,
+                        title: 'Los salarios más altos de la NFL en 2023',
+                        category: 'noticias',
+                        date: '5 Sept 2023',
+                        readTime: 6,
+                        excerpt: 'Descubre qué jugadores lideran la lista de ingresos y cómo afecta a los límites salariales.',
+                        image: '/Users/andreabazurto6/Desktop/apps_portafolio/blogs/nfl_blog/assets/images/nfl4.jpg',
+                        author: 'Marta González',
+                        authorInitials: 'MG',
+                        link: 'salarios-nfl-2023.html'
+                    },
+                    {
+                        id: 3,
+                        title: 'Estadísticas NFL 2023: Los números que definen la temporada',
+                        category: 'analisis',
+                        date: '15 Sept 2023',
+                        readTime: 10,
+                        excerpt: 'Análisis profundo de las estadísticas más relevantes de la temporada 2023.',
+                        image: '/Users/andreabazurto6/Desktop/apps_portafolio/blogs/nfl_blog/assets/images/nfl9.png',
+                        author: 'Antonio Sánchez',
+                        authorInitials: 'AS',
+                        link: 'estadisticas-nfl-2023.html'
+                    },
+                    {
+                        id: 4,
+                        title: 'Los 5 rookies que están sorprendiendo en 2023',
+                        category: 'opinion',
+                        date: '18 Sept 2023',
+                        readTime: 7,
+                        excerpt: 'Un vistazo a los novatos que están teniendo un impacto inmediato en la liga.',
+                        image: '/Users/andreabazurto6/Desktop/apps_portafolio/blogs/nfl_blog/assets/images/nfl10.png',
+                        author: 'Carlos Rodríguez',
+                        authorInitials: 'CR',
+                        link: '#'
+                    },
+                    {
+                        id: 5,
+                        title: 'Guía completa de Fantasy Football 2023',
+                        category: 'fantasy',
+                        date: '20 Ago 2023',
+                        readTime: 12,
+                        excerpt: 'Todo lo que necesitas saber para dominar tu liga de Fantasy Football esta temporada.',
+                        image: '/Users/andreabazurto6/Desktop/apps_portafolio/blogs/nfl_blog/assets/images/nfl6.jpg',
+                        author: 'Marta González',
+                        authorInitials: 'MG',
+                        link: 'fantasy-football-guia.html'
+                    },
+                    {
+                        id: 6,
+                        title: 'La evolución de la defensa en la NFL moderna',
+                        category: 'analisis',
+                        date: '10 Sept 2023',
+                        readTime: 9,
+                        excerpt: 'Cómo han cambiado los esquemas defensivos en la última década para contrarrestar ofensivas explosivas.',
+                        image: '/Users/andreabazurto6/Desktop/apps_portafolio/blogs/nfl_blog/assets/images/nfl12.png',
+                        author: 'Antonio Sánchez',
+                        authorInitials: 'AS',
+                        link: '#'
+                    },
+                    {
+                        id: 7,
+                        title: '¿Está en peligro el récord de temporada perfecta?',
+                        category: 'opinion',
+                        date: '22 Sept 2023',
+                        readTime: 5,
+                        excerpt: 'Analizamos si algún equipo actual tiene el potencial de igualar la hazaña de los Dolphins de 1972.',
+                        image: '/Users/andreabazurto6/Desktop/apps_portafolio/blogs/nfl_blog/assets/images/nfl1.jpg',
+                        author: 'Carlos Rodríguez',
+                        authorInitials: 'CR',
+                        link: '#'
+                    },
+                    {
+                        id: 8,
+                        title: 'Lesiones que están marcando la temporada 2023',
+                        category: 'noticias',
+                        date: '14 Sept 2023',
+                        readTime: 6,
+                        excerpt: 'Repasamos las bajas más significativas y cómo afectan a las aspiraciones de los equipos.',
+                        image: '/Users/andreabazurto6/Desktop/apps_portafolio/blogs/nfl_blog/assets/images/nfl11.png',
+                        author: 'Marta González',
+                        authorInitials: 'MG',
+                        link: '#'
+                    },
+                    {
+                        id: 9,
+                        title: 'Historia del Super Bowl: Momentos inolvidables',
+                        category: 'historia',
+                        date: '28 Ago 2023',
+                        readTime: 11,
+                        excerpt: 'Recorremos los momentos más memorables de la historia del evento deportivo más grande de EE.UU.',
+                        image: '/Users/andreabazurto6/Desktop/apps_portafolio/blogs/nfl_blog/assets/images/nfl18.png',
+                        author: 'Antonio Sánchez',
+                        authorInitials: 'AS',
+                        link: 'super-bowl-historia.html'
+                    },
+                    {
+                        id: 10,
+                        title: 'Estrategias de waiver wire para la semana 4',
+                        category: 'fantasy',
+                        date: '26 Sept 2023',
+                        readTime: 5,
+                        excerpt: 'Los jugadores que debes priorizar en la waiver wire esta semana para fortalecer tu equipo.',
+                        image: ' /Users/andreabazurto6/Desktop/apps_portafolio/blogs/nfl_blog/assets/images/nfl9.png',
+                        author: 'Marta González',
+                        authorInitials: 'MG',
+                        link: '#'
+                    }
+                ],
+                init() {
+                    // Obtener el tema guardado o detectar la preferencia del sistema
+                    const savedTheme = localStorage.getItem('theme');
+                    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    
+                    this.isDark = savedTheme ? savedTheme === 'dark' : systemPrefersDark;
+                    
+                    // Aplicar el tema al inicializar
+                    this.applyTheme();
+                },
+                toggleTheme() {
+                    this.isDark = !this.isDark;
+                    this.applyTheme();
+                    localStorage.setItem('theme', this.isDark ? 'dark' : 'light');
+                },
+                applyTheme() {
+                    if (this.isDark) {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
+                },
+                get filteredArticles() {
+                    let filtered = this.articles;
+                    
+                    // Filtrar por categoría
+                    if (this.selectedCategory !== 'all') {
+                        filtered = filtered.filter(article => article.category === this.selectedCategory);
+                    }
+                    
+                    // Paginación
+                    const startIndex = (this.currentPage - 1) * this.articlesPerPage;
+                    return filtered.slice(startIndex, startIndex + this.articlesPerPage);
+                },
+                get totalPages() {
+                    let filtered = this.articles;
+                    
+                    // Filtrar por categoría
+                    if (this.selectedCategory !== 'all') {
+                        filtered = filtered.filter(article => article.category === this.selectedCategory);
+                    }
+                    
+                    return Math.ceil(filtered.length / this.articlesPerPage);
+                }
+            }
+        }
+
+        // Barra de progreso de lectura
+        window.addEventListener('scroll', function() {
+            const winHeight = window.innerHeight;
+            const docHeight = document.documentElement.scrollHeight;
+            const scrollTop = window.pageYOffset;
+            const trackLength = docHeight - winHeight;
+            const progress = Math.floor((scrollTop / trackLength) * 100);
+            document.getElementById('reading-progress').style.width = progress + '%';
+        });
+
+        // Inicializar el tema al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ya está manejado por Alpine.js, pero por si acaso
+            const savedTheme = localStorage.getItem('theme');
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const isDark = savedTheme ? savedTheme === 'dark' : systemPrefersDark;
+            
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+    </script>
+</body>
+</html>

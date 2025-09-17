@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estadísticas NFL 2023 | NFL Blog</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        nfl: {
+                            blue: '#013369',
+                            red: '#D50A0A',
+                            silver: '#A5ACAF'
+                        },
+                        neutral: {
+                            850: '#1e1e1e',
+                            950: '#0f0f0f'
+                        }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <!-- favicon -->
+    <link rel="icon" href="favicon.png" type="image/x-icon">
+    <link rel="shortcut icon" href="favicon.png" type="image/x-icon">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .article-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .article-card:hover {
+            transform: translateY(-5px);
+        }
+        .team-logo {
+            transition: transform 0.3s ease;
+        }
+        .team-logo:hover {
+            transform: scale(1.1);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #013369 0%, #D50A0A 100%);
+        }
+        .prose {
+            max-width: none;
+        }
+        .prose h2 {
+            font-weight: 700;
+            font-size: 1.5em;
+            margin-top: 2em;
+            margin-bottom: 1em;
+            color: #013369;
+        }
+        .dark .prose h2 {
+            color: #D50A0A;
+        }
+        .prose p {
+            margin-bottom: 1.25em;
+            line-height: 1.7;
+        }
+        .prose blockquote {
+            border-left: 4px solid #D50A0A;
+            padding-left: 1.5em;
+            margin: 2em 0;
+            font-style: italic;
+        }
+        .dark .prose blockquote {
+            border-left-color: #013369;
+        }
+        .theme-transition * {
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+        .reading-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 4px;
+            background: linear-gradient(90deg, #013369, #D50A0A);
+            z-index: 9999;
+        }
+        .stat-card {
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .dark .stat-card:hover {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+        }
+        .comparison-bar {
+            height: 24px;
+            border-radius: 12px;
+            margin: 8px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        .comparison-fill {
+            height: 100%;
+            border-radius: 12px;
+            transition: width 1s ease-in-out;
+        }
+        .leader-badge {
+            position: absolute;
+            top: -8px;
+            right: 10px;
+            background: #D50A0A;
+            color: white;
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+        .dark .leader-badge {
+            background: #013369;
+        }
+    </style>
+</head>
+<body x-data="themeHandler()" x-bind:class="{'dark': isDark}" class="theme-transition bg-white dark:bg-neutral-950 text-gray-800 dark:text-gray-200 min-h-screen">
+    <!-- Barra de progreso de lectura -->
+    <div class="reading-progress" id="reading-progress"></div>
+
+    <!-- Navegación fija -->
+    <nav class="fixed w-full bg-white/90 dark:bg-neutral-850/90 backdrop-blur-sm py-4 z-50 border-b border-gray-200 dark:border-neutral-700 shadow-sm">
+        <div class="container mx-auto px-4 flex justify-between items-center">
+            <a href="index.html" class="text-2xl font-bold text-nfl-blue dark:text-white flex items-center">
+                <i class="fas fa-football mr-2"></i>NFL Blog
+            </a>
+            
+            <div class="flex items-center space-x-6">
+                <a href="index.html#inicio" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Inicio</a>
+                <a href="index.html#equipos" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Equipos</a>
+                <a href="index.html#articulos" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Artículos</a>
+                <a href="#estadisticas" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Estadísticas</a>
+                 <a href="temporada/calendario-resultados.html" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Calendario</a>
+                
+                <!-- Selector de tema -->
+                <div class="flex items-center space-x-2">
+                    <span x-show="!isDark"><i class="fas fa-sun text-yellow-500"></i></span>
+                    <span x-show="isDark"><i class="fas fa-moon text-blue-300"></i></span>
+                    
+                    <button 
+                        @click="toggleTheme()"
+                        :aria-label="isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+                        class="w-12 h-6 bg-gray-300 dark:bg-nfl-blue rounded-full p-1 relative focus:outline-none focus:ring-2 focus:ring-nfl-blue"
+                    >
+                        <span class="w-4 h-4 bg-white dark:bg-gray-200 rounded-full shadow-md block transform transition-transform duration-300" :class="{'translate-x-6': isDark}"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Espacio para la navegación fija -->
+    <div class="h-20"></div>
+
+    <!-- Contenido principal -->
+    <main class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Encabezado del artículo -->
+        <article class="prose dark:prose-invert prose-lg max-w-none">
+            <div class="mb-8">
+                <a href="index.html" class="inline-flex items-center text-nfl-blue dark:text-nfl-red hover:underline font-medium mb-4">
+                    <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clip-rule="evenodd"></path>
+                    </svg>
+                    Volver al inicio
+                </a>
+                
+                <span class="text-sm font-semibold bg-nfl-blue text-white px-3 py-1 rounded-full">Estadísticas</span>
+                <span class="text-sm text-gray-500 dark:text-gray-400 ml-3">12 Septiembre 2023</span>
+                
+                <h1 class="text-3xl md:text-4xl font-bold mt-4 mb-6 text-nfl-blue dark:text-nfl-red">Estadísticas NFL 2023: Los números que definen la temporada</h1>
+                
+                <p class="text-xl text-gray-600 dark:text-gray-300 mb-6">
+                    Análisis profundo de las estadísticas más relevantes de la temporada 2023. Descubre quiénes lideran las principales categorías y cómo se comparan con los récords históricos.
+                </p>
+                
+                <div class="flex items-center mt-8">
+                    <div class="w-12 h-12 rounded-full bg-nfl-red text-white flex items-center justify-center font-bold text-lg">ER</div>
+                    <div class="ml-4">
+                        <p class="font-semibold m-0">Equipo de Redacción</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 m-0">NFL Blog</p>
+                    </div>
+                </div>
+            </div>
+            
+            <img src="/Users/andreabazurto6/Desktop/apps_portafolio/blogs/nfl_blog/assets/images/nfl10.png" 
+                 alt="Estadísticas NFL" class="w-full h-64 md:h-96 object-cover rounded-xl shadow-md mb-10">
+            
+            <!-- Contenido del artículo -->
+            <p>La temporada 2023 de la NFL está mostrando números extraordinarios que redefinen lo que creíamos posible en el fútbol americano moderno. Desde quarterbacks que baten récords de precisión hasta defensas que dominan como nunca, estas son las estadísticas que están marcando la diferencia.</p>
+            
+            <h2>Líderes en yardas por pase</h2>
+            
+            <p>La era del pase continúa su dominio en la NFL, con varios mariscales de campo superando las 4,000 yardas por temporada. Pero quien realmente está destacando es <strong>Patrick Mahomes</strong>, que va camino de superar su propia marca personal.</p>
+            
+            <div class="bg-gray-50 dark:bg-neutral-850 p-6 rounded-xl my-8">
+                <h3 class="text-xl font-bold mb-4 text-nfl-blue dark:text-nfl-red">Top 5 QB en yardas por pase</h3>
+                <div class="space-y-4">
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span class="font-medium">Patrick Mahomes (KC)</span>
+                            <span class="font-bold">4,842</span>
+                        </div>
+                        <div class="comparison-bar bg-gray-200 dark:bg-neutral-700">
+                            <div class="comparison-fill bg-nfl-blue" style="width: 100%"></div>
+                            <span class="leader-badge">Líder</span>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span class="font-medium">Justin Herbert (LAC)</span>
+                            <span class="font-bold">4,739</span>
+                        </div>
+                        <div class="comparison-bar bg-gray-200 dark:bg-neutral-700">
+                            <div class="comparison-fill bg-nfl-blue" style="width: 98%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span class="font-medium">Joe Burrow (CIN)</span>
+                            <span class="font-bold">4,525</span>
+                        </div>
+                        <div class="comparison-bar bg-gray-200 dark:bg-neutral-700">
+                            <div class="comparison-fill bg-nfl-blue" style="width: 93%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span class="font-medium">Josh Allen (BUF)</span>
+                            <span class="font-bold">4,407</span>
+                        </div>
+                        <div class="comparison-bar bg-gray-200 dark:bg-neutral-700">
+                            <div class="comparison-fill bg-nfl-blue" style="width: 91%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span class="font-medium">Trevor Lawrence (JAX)</span>
+                            <span class="font-bold">4,113</span>
+                        </div>
+                        <div class="comparison-bar bg-gray-200 dark:bg-neutral-700">
+                            <div class="comparison-fill bg-nfl-blue" style="width: 85%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <h2>Líderes en yardas terrestres</h2>
+            
+            <p>Aunque la NFL se ha convertido en una liga de pase, los corredores siguen siendo esenciales para el éxito ofensivo. <strong>Derrick Henry</strong> continúa demostrando por qué es considerado uno de los mejores corredores de la era moderna.</p>
+            
+            <div class="bg-gray-50 dark:bg-neutral-850 p-6 rounded-xl my-8">
+                <h3 class="text-xl font-bold mb-4 text-nfl-blue dark:text-nfl-red">Top 5 RB en yardas terrestres</h3>
+                <div class="space-y-4">
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span class="font-medium">Derrick Henry (TEN)</span>
+                            <span class="font-bold">1,538</span>
+                        </div>
+                        <div class="comparison-bar bg-gray-200 dark:bg-neutral-700">
+                            <div class="comparison-fill bg-nfl-red" style="width: 100%"></div>
+                            <span class="leader-badge">Líder</span>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span class="font-medium">Josh Jacobs (LV)</span>
+                            <span class="font-bold">1,495</span>
+                        </div>
+                        <div class="comparison-bar bg-gray-200 dark:bg-neutral-700">
+                            <div class="comparison-fill bg-nfl-red" style="width: 97%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span class="font-medium">Nick Chubb (CLE)</span>
+                            <span class="font-bold">1,447</span>
+                        </div>
+                        <div class="comparison-bar bg-gray-200 dark:bg-neutral-700">
+                            <div class="comparison-fill bg-nfl-red" style="width: 94%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span class="font-medium">Saquon Barkley (NYG)</span>
+                            <span class="font-bold">1,398</span>
+                        </div>
+                        <div class="comparison-bar bg-gray-200 dark:bg-neutral-700">
+                            <div class="comparison-fill bg-nfl-red" style="width: 91%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span class="font-medium">Jonathan Taylor (IND)</span>
+                            <span class="font-bold">1,332</span>
+                        </div>
+                        <div class="comparison-bar bg-gray-200 dark:bg-neutral-700">
+                            <div class="comparison-fill bg-nfl-red" style="width: 87%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <h2>Estadísticas defensivas destacadas</h2>
+            
+            <p>La defensa sigue ganando campeonatos, y esta temporada no es la excepción. Estos jugadores están teniendo un impacto significativo en el lado defensivo del balón.</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
+                <div class="stat-card bg-white dark:bg-neutral-850 p-6 rounded-xl shadow-md border border-gray-100 dark:border-neutral-700">
+                    <h3 class="text-xl font-bold mb-4 text-nfl-blue dark:text-nfl-red">Más capturas</h3>
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 rounded-full bg-nfl-blue text-white flex items-center justify-center font-bold mr-3">NM</div>
+                        <div>
+                            <p class="font-bold m-0">Nick Bosa (SF)</p>
+                            <p class="text-sm m-0">18.5 capturas</p>
+                        </div>
+                    </div>
+                    <p class="text-sm">Bosa mantiene su dominio como el pasador externo más consistente de la liga, superando su marca personal.</p>
+                </div>
+                
+                <div class="stat-card bg-white dark:bg-neutral-850 p-6 rounded-xl shadow-md border border-gray-100 dark:border-neutral-700">
+                    <h3 class="text-xl font-bold mb-4 text-nfl-blue dark:text-nfl-red">Más intercepciones</h3>
+                    <div class="flex items-center mb-4">
+                        <div class="w-10 h-10 rounded-full bg-nfl-red text-white flex items-center justify-center font-bold mr-3">XH</div>
+                        <div>
+                            <p class="font-bold m-0">Xavien Howard (MIA)</p>
+                            <p class="text-sm m-0">7 intercepciones</p>
+                        </div>
+                    </div>
+                    <p class="text-sm">Howard demuestra nuevamente por qué es considerado uno de los cornerbacks más peligrosos de la NFL.</p>
+                </div>
+            </div>
+            
+            <h2>Comparativa de eficiencia ofensiva</h2>
+            
+            <p>La eficiencia en ataque es lo que separa a los equipos contendientes del resto. Analizamos qué equipos están aprovechando mejor sus posesiones.</p>
+            
+            <div class="bg-white dark:bg-neutral-850 p-6 rounded-xl shadow-md my-8">
+                <canvas id="offensiveEfficiencyChart" height="250"></canvas>
+            </div>
+            
+            <h2>Récords históricos en peligro</h2>
+            
+            <p>Varios jugadores se acercan a marcas históricas que han permanecido intactas durante años o incluso décadas:</p>
+            
+            <ul class="list-disc pl-5 my-6">
+                <li><strong>Tom Brady</strong> está a 12 pases de touchdown de superar los 650 en su carrera, extendiendo su propio récord.</li>
+                <li><strong>Justin Tucker</strong> necesita 8 field goals de 50+ yardas para establecer la nueva marca de kicks largos en una carrera.</li>
+                <li><strong>Travis Kelce</strong> podría convertirse en el tight end con más recepciones en la historia de la NFL, superando a Tony Gonzalez.</li>
+                <li><strong>Aaron Donald</strong> está a 5 capturas de convertirse en el defensive tackle con más sacks desde que se lleva este registro.</li>
+            </ul>
+            
+            <div class="bg-gray-50 dark:bg-neutral-850 p-6 rounded-xl my-8">
+                <h3 class="text-xl font-bold mb-4 text-nfl-blue dark:text-nfl-red">Porcentaje de pases completados (Mín. 300 intentos)</h3>
+                <div class="space-y-4">
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span class="font-medium">Joe Burrow (CIN)</span>
+                            <span class="font-bold">71.2%</span>
+                        </div>
+                        <div class="comparison-bar bg-gray-200 dark:bg-neutral-700">
+                            <div class="comparison-fill bg-nfl-blue" style="width: 100%"></div>
+                            <span class="leader-badge">Líder</span>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span class="font-medium">Geno Smith (SEA)</span>
+                            <span class="font-bold">70.5%</span>
+                        </div>
+                        <div class="comparison-bar bg-gray-200 dark:bg-neutral-700">
+                            <div class="comparison-fill bg-nfl-blue" style="width: 99%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span class="font-medium">Justin Herbert (LAC)</span>
+                            <span class="font-bold">69.8%</span>
+                        </div>
+                        <div class="comparison-bar bg-gray-200 dark:bg-neutral-700">
+                            <div class="comparison-fill bg-nfl-blue" style="width: 98%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <h2>Análisis por equipos</h2>
+            
+            <p>Al observar las estadísticas por equipos, encontramos patrones interesantes que explican el éxito de los mejores conjuntos de la liga:</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 my-8">
+                <div class="stat-card bg-white dark:bg-neutral-850 p-6 rounded-xl shadow-md border border-gray-100 dark:border-neutral-700 text-center">
+                    <div class="text-4xl font-bold text-nfl-blue dark:text-nfl-red mb-2">12.8</div>
+                    <div class="text-lg font-semibold mb-1">Puntos permitidos por juego</div>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">San Francisco 49ers (Mejor defensa)</p>
+                </div>
+                
+                <div class="stat-card bg-white dark:bg-neutral-850 p-6 rounded-xl shadow-md border border-gray-100 dark:border-neutral-700 text-center">
+                    <div class="text-4xl font-bold text-nfl-blue dark:text-nfl-red mb-2">+15</div>
+                    <div class="text-lg font-semibold mb-1">Diferencia de turnovers</div>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Philadelphia Eagles (Líder en balones recuperados)</p>
+                </div>
+                
+                <div class="stat-card bg-white dark:bg-neutral-850 p-6 rounded-xl shadow-md border border-gray-100 dark:border-neutral-700 text-center">
+                    <div class="text-4xl font-bold text-nfl-blue dark:text-nfl-red mb-2">52.3%</div>
+                    <div class="text-lg font-semibold mb-1">Eficiencia en terceros down</div>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Kansas City Chiefs (Mejor ofensiva en situaciones clave)</p>
+                </div>
+            </div>
+            
+            <div class="bg-gray-100 dark:bg-neutral-850 rounded-xl p-6 mt-10 border border-gray-200 dark:border-neutral-700">
+                <h3 class="text-xl font-bold mb-4 text-nfl-blue dark:text-nfl-red">¿Qué estadística te parece más impactante?</h3>
+                <p class="mb-4">¿Crees que algún récord histórico será superado esta temporada? ¿Qué jugador te ha sorprendido más por sus números? Déjanos tus comentarios.</p>
+                
+                <div class="flex space-x-4">
+                    <a href="#" class="flex items-center text-nfl-blue dark:text-nfl-red hover:underline">
+                        <i class="fab fa-twitter mr-2"></i> Comentar en Twitter
+                    </a>
+                    <a href="#" class="flex items-center text-nfl-blue dark:text-nfl-red hover:underline">
+                        <i class="fab fa-facebook mr-2"></i> Comentar en Facebook
+                    </a>
+                </div>
+            </div>
+            
+            <div class="mt-12 pt-8 border-t border-gray-200 dark:border-neutral-700">
+                <h3 class="text-xl font-bold mb-6">Artículos relacionados</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <a href="salarios-nfl-2023.html" class="group">
+                        <div class="bg-white dark:bg-neutral-850 rounded-lg p-4 shadow-md hover:shadow-lg transition border border-gray-100 dark:border-neutral-700">
+                            <span class="text-xs font-semibold bg-nfl-red text-white px-2 py-1 rounded">Finanzas</span>
+                            <h4 class="font-bold mt-2 group-hover:text-nfl-blue dark:group-hover:text-nfl-red">Los salarios más altos de la NFL en 2023</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">Descubre qué jugadores lideran la lista de ingresos y cómo afecta a los límites salariales...</p>
+                        </div>
+                    </a>
+                    
+                    <a href="#" class="group">
+                        <div class="bg-white dark:bg-neutral-850 rounded-lg p-4 shadow-md hover:shadow-lg transition border border-gray-100 dark:border-neutral-700">
+                            <span class="text-xs font-semibold bg-nfl-blue text-white px-2 py-1 rounded">Análisis</span>
+                            <h4 class="font-bold mt-2 group-hover:text-nfl-blue dark:group-hover:text-nfl-red">Análisis del Draft 2023: Los mejores picks</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">Evaluación de las selecciones más impactantes y cómo están rindiendo en su temporada de rookie...</p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </article>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-100 dark:bg-neutral-850 border-t border-gray-200 dark:border-neutral-700 py-12 mt-16">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center">
+                        <i class="fas fa-football mr-2 text-nfl-blue dark:text-nfl-red"></i>NFL Blog
+                    </h3>
+                    <p class="text-gray-600 dark:text-gray-300 text-sm">
+                        Tu fuente confiable de noticias, análisis y estadísticas de la National Football League.
+                    </p>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Secciones</h4>
+                    <ul class="space-y-2">
+                        <li><a href="index.html#inicio" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Inicio</a></li>
+                        <li><a href="index.html#equipos" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Equipos</a></li>
+                        <li><a href="index.html#articulos" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Artículos</a></li>
+                        <li><a href="index.html#estadisticas" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Estadísticas</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Equipos</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">AFC Oeste</a></li>
+                        <li><a href="#" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">NFC Este</a></li>
+                        <li><a href="#" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">AFC Norte</a></li>
+                        <li><a href="#" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">NFC Oeste</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Síguenos</h4>
+                    <div class="flex space-x-4 mb-6">
+                        <a href="#" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-nfl-red">
+                            <i class="fab fa-twitter text-lg"></i>
+                        </a>
+                        <a href="#" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-nfl-red">
+                            <i class="fab fa-facebook text-lg"></i>
+                        </a>
+                        <a href="#" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-nfl-red">
+                            <i class="fab fa-instagram text-lg"></i>
+                        </a>
+                        <a href="#" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-nfl-red">
+                            <i class="fab fa-youtube text-lg"></i>
+                        </a>
+                    </div>
+                    
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">Newsletter</h4>
+                    <div class="flex">
+                        <input type="email" placeholder="Tu email" class="px-3 py-2 border border-gray-300 dark:border-neutral-700 rounded-l text-sm w-full dark:bg-neutral-800">
+                        <button class="bg-nfl-blue text-white px-3 py-2 rounded-r text-sm">Suscribir</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-8 text-center text-gray-500 dark:text-gray-400 text-sm">
+                <p>© 2023 NFL Blog. Este sitio no está afiliado oficialmente con la NFL. Todas las marcas registradas son propiedad de sus respectivos dueños.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Función para gestionar el tema con Alpine.js
+        function themeHandler() {
+            return {
+                isDark: false,
+                init() {
+                    // Obtener el tema guardado o detectar la preferencia del sistema
+                    const savedTheme = localStorage.getItem('theme');
+                    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    
+                    this.isDark = savedTheme ? savedTheme === 'dark' : systemPrefersDark;
+                    
+                    // Aplicar el tema al inicializar
+                    this.applyTheme();
+                    
+                    // Inicializar gráficos
+                    this.initCharts();
+                },
+                toggleTheme() {
+                    this.isDark = !this.isDark;
+                    this.applyTheme();
+                    localStorage.setItem('theme', this.isDark ? 'dark' : 'light');
+                    
+                    // Recrear gráficos con el nuevo tema
+                    setTimeout(() => this.initCharts(), 100);
+                },
+                applyTheme() {
+                    if (this.isDark) {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
+                },
+                initCharts() {
+                    // Gráfico de eficiencia ofensiva
+                    const offensiveCtx = document.getElementById('offensiveEfficiencyChart').getContext('2d');
+                    
+                    // Destruir gráfico anterior si existe
+                    if (window.offensiveChart) {
+                        window.offensiveChart.destroy();
+                    }
+                    
+                    const isDarkMode = document.documentElement.classList.contains('dark');
+                    const textColor = isDarkMode ? '#e5e7eb' : '#374151';
+                    const gridColor = isDarkMode ? '#4b5563' : '#e5e7eb';
+                    
+                    window.offensiveChart = new Chart(offensiveCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Kansas City', 'Philadelphia', 'San Francisco', 'Buffalo', 'Cincinnati', 'Dallas'],
+                            datasets: [{
+                                label: 'Puntos por juego',
+                                data: [29.8, 28.5, 27.9, 27.2, 26.8, 26.1],
+                                backgroundColor: '#013369',
+                                borderColor: '#013369',
+                                borderWidth: 1
+                            }, {
+                                label: 'Yardas por juego',
+                                data: [415, 398, 385, 397, 376, 382],
+                                backgroundColor: '#D50A0A',
+                                borderColor: '#D50A0A',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: {
+                                    position: 'top',
+                                    labels: {
+                                        color: textColor
+                                    }
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Comparativa de eficiencia ofensiva por equipo',
+                                    color: textColor,
+                                    font: {
+                                        size: 16
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    grid: {
+                                        color: gridColor
+                                    },
+                                    ticks: {
+                                        color: textColor
+                                    }
+                                },
+                                x: {
+                                    grid: {
+                                        display: false
+                                    },
+                                    ticks: {
+                                        color: textColor
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+        }
+
+        // Barra de progreso de lectura
+        window.addEventListener('scroll', function() {
+            const winHeight = window.innerHeight;
+            const docHeight = document.documentElement.scrollHeight;
+            const scrollTop = window.pageYOffset;
+            const trackLength = docHeight - winHeight;
+            const progress = Math.floor((scrollTop / trackLength) * 100);
+            document.getElementById('reading-progress').style.width = progress + '%';
+        });
+
+        // Inicializar el tema al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ya está manejado por Alpine.js, pero por si acaso
+            const savedTheme = localStorage.getItem('theme');
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const isDark = savedTheme ? savedTheme === 'dark' : systemPrefersDark;
+            
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+            
+            // Animar barras de comparación
+            setTimeout(() => {
+                document.querySelectorAll('.comparison-fill').forEach(bar => {
+                    bar.style.width = '0';
+                    setTimeout(() => {
+                        bar.style.width = bar.style.width;
+                    }, 50);
+                });
+            }, 500);
+        });
+    </script>
+</body>
+</html>

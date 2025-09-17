@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historia del Super Bowl | NFL Blog</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        nfl: {
+                            blue: '#013369',
+                            red: '#D50A0A',
+                            silver: '#A5ACAF'
+                        },
+                        neutral: {
+                            850: '#1e1e1e',
+                            950: '#0f0f0f'
+                        }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- favicon -->
+    <link rel="icon" href="favicon.png" type="image/x-icon">
+    <link rel="shortcut icon" href="favicon.png" type="image/x-icon">
+
+    <style>
+        .article-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .article-card:hover {
+            transform: translateY(-5px);
+        }
+        .superbowl-card {
+            transition: all 0.3s ease;
+        }
+        .superbowl-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .dark .superbowl-card:hover {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #013369 0%, #D50A0A 100%);
+        }
+        .prose {
+            max-width: none;
+        }
+        .prose h2 {
+            font-weight: 700;
+            font-size: 1.5em;
+            margin-top: 2em;
+            margin-bottom: 1em;
+            color: #013369;
+        }
+        .dark .prose h2 {
+            color: #D50A0A;
+        }
+        .prose p {
+            margin-bottom: 1.25em;
+            line-height: 1.7;
+        }
+        .theme-transition * {
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+        .reading-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 4px;
+            background: linear-gradient(90deg, #013369, #D50A0A);
+            z-index: 9999;
+        }
+        .timeline {
+            position: relative;
+            padding-left: 3rem;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            height: 100%;
+            width: 2px;
+            background: linear-gradient(to bottom, #013369, #D50A0A);
+        }
+        .timeline-item {
+            position: relative;
+            margin-bottom: 2rem;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -3rem;
+            top: 0.5rem;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #013369;
+            border: 3px solid white;
+        }
+        .dark .timeline-item::before {
+            border: 3px solid #1e1e1e;
+        }
+        .trophy-icon {
+            color: #FFD700;
+            text-shadow: 0px 0px 5px rgba(0, 0, 0, 0.3);
+        }
+        .superbowl-logo {
+            transition: transform 0.5s ease;
+        }
+        .superbowl-card:hover .superbowl-logo {
+            transform: scale(1.1);
+        }
+        .mvp-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: linear-gradient(135deg, #013369 0%, #D50A0A 100%);
+            color: white;
+            font-size: 0.7rem;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+        }
+        .decade-section {
+            scroll-margin-top: 100px;
+        }
+        .team-logo-small {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+        }
+        .conference-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 0.7rem;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+        }
+        .afc-badge {
+            background: #013369;
+            color: white;
+        }
+        .nfc-badge {
+            background: #D50A0A;
+            color: white;
+        }
+    </style>
+</head>
+<body x-data="superbowlHistory()" x-bind:class="{'dark': isDark}" class="theme-transition bg-white dark:bg-neutral-950 text-gray-800 dark:text-gray-200 min-h-screen">
+    <!-- Barra de progreso de lectura -->
+    <div class="reading-progress" id="reading-progress"></div>
+
+    <!-- Navegación fija -->
+    <nav class="fixed w-full bg-white/90 dark:bg-neutral-850/90 backdrop-blur-sm py-4 z-50 border-b border-gray-200 dark:border-neutral-700 shadow-sm">
+        <div class="container mx-auto px-4 flex justify-between items-center">
+            <a href="index.html" class="text-2xl font-bold text-nfl-blue dark:text-white flex items-center">
+                <i class="fas fa-football mr-2"></i>NFL Blog
+            </a>
+            
+            <div class="flex items-center space-x-6">
+                <a href="../index.html#inicio" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Inicio</a>
+                <a href="equipos-nfl.html" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Equipos</a>
+                <a href="jugadores-destacados.html" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Jugadores</a>
+                <a href="index.html#articulos" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Artículos</a>
+                <a href="calendario-resultados.html" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Calendario</a>
+                
+                <!-- Selector de tema -->
+                <div class="flex items-center space-x-2">
+                    <span x-show="!isDark"><i class="fas fa-sun text-yellow-500"></i></span>
+                    <span x-show="isDark"><i class="fas fa-moon text-blue-300"></i></span>
+                    
+                    <button 
+                        @click="toggleTheme()"
+                        :aria-label="isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+                        class="w-12 h-6 bg-gray-300 dark:bg-nfl-blue rounded-full p-1 relative focus:outline-none focus:ring-2 focus:ring-nfl-blue"
+                    >
+                        <span class="w-4 h-4 bg-white dark:bg-gray-200 rounded-full shadow-md block transform transition-transform duration-300" :class="{'translate-x-6': isDark}"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Espacio para la navegación fija -->
+    <div class="h-20"></div>
+
+    <!-- Contenido principal -->
+    <main class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Encabezado de la página -->
+        <div class="mb-12 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold text-nfl-blue dark:text-nfl-red mb-4">Historia del Super Bowl</h1>
+            <p class="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+                Descubre la historia completa del evento deportivo más importante de Estados Unidos. Desde sus inicios hasta los momentos más memorables.
+            </p>
+        </div>
+
+        <!-- Navegación por décadas -->
+        <div class="mb-10 bg-white dark:bg-neutral-850 rounded-xl shadow-md p-4 sticky top-20 z-10">
+            <h2 class="text-lg font-semibold mb-3 text-nfl-blue dark:text-nfl-red">Explora por décadas</h2>
+            <div class="flex flex-wrap gap-2">
+                <a href="#1960s" class="px-3 py-1 bg-gray-100 dark:bg-neutral-800 hover:bg-nfl-blue hover:text-white dark:hover:bg-nfl-blue rounded-full text-sm transition">1960s</a>
+                <a href="#1970s" class="px-3 py-1 bg-gray-100 dark:bg-neutral-800 hover:bg-nfl-blue hover:text-white dark:hover:bg-nfl-blue rounded-full text-sm transition">1970s</a>
+                <a href="#1980s" class="px-3 py-1 bg-gray-100 dark:bg-neutral-800 hover:bg-nfl-blue hover:text-white dark:hover:bg-nfl-blue rounded-full text-sm transition">1980s</a>
+                <a href="#1990s" class="px-3 py-1 bg-gray-100 dark:bg-neutral-800 hover:bg-nfl-blue hover:text-white dark:hover:bg-nfl-blue rounded-full text-sm transition">1990s</a>
+                <a href="#2000s" class="px-3 py-1 bg-gray-100 dark:bg-neutral-800 hover:bg-nfl-blue hover:text-white dark:hover:bg-nfl-blue rounded-full text-sm transition">2000s</a>
+                <a href="#2010s" class="px-3 py-1 bg-gray-100 dark:bg-neutral-800 hover:bg-nfl-blue hover:text-white dark:hover:bg-nfl-blue rounded-full text-sm transition">2010s</a>
+                <a href="#2020s" class="px-3 py-1 bg-gray-100 dark:bg-neutral-800 hover:bg-nfl-blue hover:text-white dark:hover:bg-nfl-blue rounded-full text-sm transition">2020s</a>
+            </div>
+        </div>
+
+        <!-- Introducción -->
+        <section class="mb-16">
+            <div class="bg-gradient-to-r from-nfl-blue to-nfl-red rounded-2xl p-8 text-white shadow-xl">
+                <h2 class="text-2xl font-bold mb-4">El evento deportivo más visto en Estados Unidos</h2>
+                <p class="mb-6">El Super Bowl es el partido por el campeonato de la National Football League (NFL), la liga de fútbol americano profesional de Estados Unidos. Se disputa cada año entre los campeones de la Conferencia Nacional (NFC) y la Conferencia Americana (AFC).</p>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                    <div>
+                        <div class="text-2xl font-bold">57</div>
+                        <div class="text-sm">Ediciones</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold">110M</div>
+                        <div class="text-sm">Espectadores (promedio)</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold">$7M</div>
+                        <div class="text-sm">Costo de 30s publicitario</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold">6</div>
+                        <div class="text-sm">Títulos de Pittsburgh</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Historia y Evolución -->
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-nfl-blue dark:text-nfl-red">Historia y Evolución</h2>
+            
+            <div class="timeline">
+                <div class="timeline-item">
+                    <h3 class="text-xl font-bold mb-2">1967 - Los inicios</h3>
+                    <p>El primer Super Bowl (entonces llamado AFL-NFL World Championship Game) se jugó entre los Green Bay Packers y los Kansas City Chiefs. Los Packers ganaron 35-10 bajo el mando del legendario coach Vince Lombardi.</p>
+                </div>
+                
+                <div class="timeline-item">
+                    <h3 class="text-xl font-bold mb-2">1970 - La fusión AFL-NFL</h3>
+                    <p>La NFL y la AFL se fusionan oficialmente, creando la conferencia AFC y NFC. El juego pasa a llamarse oficialmente "Super Bowl". El trofeo del campeón es nombrado en honor a Vince Lombardi.</p>
+                </div>
+                
+                <div class="timeline-item">
+                    <h3 class="text-xl font-bold mb-2">1982 - Primer Super Bowl en interior</h3>
+                    <p>El Super Bowl XVI se juega en el Pontiac Silverdome, siendo el primero en disputarse en un estadio techado. Los San Francisco 49ers ganan su primer título derrotando a los Cincinnati Bengals.</p>
+                </div>
+                
+                <div class="timeline-item">
+                    <h3 class="text-xl font-bold mb-2">1997 - El surgimiento de los Patriots</h3>
+                    <p>New England Patriots llega a su segundo Super Bowl, comenzando una era de dominancia que extendería por dos décadas. Perderían ante los Green Bay Packers en el Super Bowl XXXI.</p>
+                </div>
+                
+                <div class="timeline-item">
+                    <h3 class="text-xl font-bold mb-2">2002 - El primer Super Bowl del siglo XXI</h3>
+                    <p>Los Patriots ganan su primer título en el Super Bowl XXXVI, comenzando la dinastía de Tom Brady y Bill Belichick. Ganaron en los últimos segundos con un field goal de Adam Vinatieri.</p>
+                </div>
+                
+                <div class="timeline-item">
+                    <h3 class="text-xl font-bold mb-2">2021 - El QB más veterano</h3>
+                    <p>Tom Brady gana su séptimo Super Bowl a los 43 años, consolidándose como el quarterback más ganador de la historia. Lo logró con los Tampa Bay Buccaneers contra los Kansas City Chiefs.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Super Bowls Destacados -->
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-nfl-blue dark:text-nfl-red">Super Bowls Destacados</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <template x-for="sb in featuredSuperBowls" :key="sb.id">
+                    <div class="superbowl-card bg-white dark:bg-neutral-850 rounded-xl overflow-hidden shadow-md border border-gray-100 dark:border-neutral-700">
+                        <div class="relative h-48 bg-gray-200 dark:bg-neutral-800 overflow-hidden">
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span class="superbowl-logo text-6xl font-bold opacity-20" x-text="sb.romanNumeral"></span>
+                            </div>
+                            <span class="mvp-badge" x-text="'MVP: ' + sb.mvp"></span>
+                        </div>
+                        <div class="p-5">
+                            <h3 class="text-xl font-bold mb-2" x-text="sb.title"></h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-3" x-text="sb.date + ' • ' + sb.venue"></p>
+                            <div class="flex justify-between items-center mb-4">
+                                <div class="text-center">
+                                    <div class="font-bold" x-text="sb.winner"></div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400" x-text="sb.winnerScore"></div>
+                                </div>
+                                <div class="text-xl font-bold">vs</div>
+                                <div class="text-center">
+                                    <div class="font-bold" x-text="sb.loser"></div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400" x-text="sb.loserScore"></div>
+                                </div>
+                            </div>
+                            <p class="text-sm" x-text="sb.highlight"></p>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </section>
+
+        <!-- Equipos con más títulos -->
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-nfl-blue dark:text-nfl-red">Equipos con más títulos</h2>
+            
+            <div class="bg-white dark:bg-neutral-850 rounded-xl shadow-md p-6 border border-gray-100 dark:border-neutral-700">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b border-gray-200 dark:border-neutral-700">
+                                <th class="text-left py-3">Equipo</th>
+                                <th class="text-center py-3">Títulos</th>
+                                <th class="text-center py-3">Años</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b border-gray-100 dark:border-neutral-800">
+                                <td class="py-3 font-semibold">Pittsburgh Steelers</td>
+                                <td class="text-center py-3">6</td>
+                                <td class="text-center py-3 text-sm text-gray-500 dark:text-gray-400">1974, 1975, 1978, 1979, 2005, 2008</td>
+                            </tr>
+                            <tr class="border-b border-gray-100 dark:border-neutral-800">
+                                <td class="py-3 font-semibold">New England Patriots</td>
+                                <td class="text-center py-3">6</td>
+                                <td class="text-center py-3 text-sm text-gray-500 dark:text-gray-400">2001, 2003, 2004, 2014, 2016, 2018</td>
+                            </tr>
+                            <tr class="border-b border-gray-100 dark:border-neutral-800">
+                                <td class="py-3 font-semibold">San Francisco 49ers</td>
+                                <td class="text-center py-3">5</td>
+                                <td class="text-center py-3 text-sm text-gray-500 dark:text-gray-400">1981, 1984, 1988, 1989, 1994</td>
+                            </tr>
+                            <tr class="border-b border-gray-100 dark:border-neutral-800">
+                                <td class="py-3 font-semibold">Dallas Cowboys</td>
+                                <td class="text-center py-3">5</td>
+                                <td class="text-center py-3 text-sm text-gray-500 dark:text-gray-400">1971, 1977, 1992, 1993, 1995</td>
+                            </tr>
+                            <tr class="border-b border-gray-100 dark:border-neutral-800">
+                                <td class="py-3 font-semibold">Green Bay Packers</td>
+                                <td class="text-center py-3">4</td>
+                                <td class="text-center py-3 text-sm text-gray-500 dark:text-gray-400">1966, 1967, 1996, 2010</td>
+                            </tr>
+                            <tr>
+                                <td class="py-3 font-semibold">New York Giants</td>
+                                <td class="text-center py-3">4</td>
+                                <td class="text-center py-3 text-sm text-gray-500 dark:text-gray-400">1986, 1990, 2007, 2011</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Datos Curiosos -->
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-nfl-blue dark:text-nfl-red">Datos Curiosos</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white dark:bg-neutral-850 p-6 rounded-xl shadow-md border border-gray-100 dark:border-neutral-700">
+                    <div class="flex items-start mb-4">
+                        <div class="text-2xl mr-4 trophy-icon">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-lg mb-2">MVP más joven y más veterano</h3>
+                            <p class="text-gray-600 dark:text-gray-300">Tom Brady tiene el récord de MVP de Super Bowl más joven (24 años en 2002) y más veterano (43 años en 2021).</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white dark:bg-neutral-850 p-6 rounded-xl shadow-md border border-gray-100 dark:border-neutral-700">
+                    <div class="flex items-start mb-4">
+                        <div class="text-2xl mr-4 trophy-icon">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-lg mb-2">Anillo de campeón</h3>
+                            <p class="text-gray-600 dark:text-gray-300">Cada jugador del equipo ganador recibe un anillo cuyo valor puede superar los $30,000 dólares. Los diseños son únicos cada año.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white dark:bg-neutral-850 p-6 rounded-xl shadow-md border border-gray-100 dark:border-neutral-700">
+                    <div class="flex items-start mb-4">
+                        <div class="text-2xl mr-4 trophy-icon">
+                            <i class="fas fa-tv"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-lg mb-2">Audiencia récord</h3>
+                            <p class="text-gray-600 dark:text-gray-300">El Super Bowl XLIX en 2015 tiene el récord de audiencia con 114.4 millones de espectadores, superando a todos los programas de TV en la historia.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white dark:bg-neutral-850 p-6 rounded-xl shadow-md border border-gray-100 dark:border-neutral-700">
+                    <div class="flex items-start mb-4">
+                        <div class="text-2xl mr-4 trophy-icon">
+                            <i class="fas fa-utensils"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-lg mb-2">Consumo de comida</h3>
+                            <p class="text-gray-600 dark:text-gray-300">El día del Super Bowl es el segundo día de mayor consumo de comida en EE.UU., después del Día de Acción de Gracias. Se consumen 1,300 millones de alitas de pollo.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Shows de medio tiempo -->
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-nfl-blue dark:text-nfl-red">Shows de Medio Tiempo</h2>
+            
+            <div class="bg-white dark:bg-neutral-850 rounded-xl shadow-md p-6 border border-gray-100 dark:border-neutral-700">
+                <p class="mb-6">El espectáculo de medio tiempo del Super Bowl se ha convertido en un evento por sí mismo, atrayendo a algunos de los artistas más importantes del mundo. Con una audiencia global de más de 100 millones de personas, es una de las plataformas musicales más grandes del planeta.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="text-center p-4 bg-gray-50 dark:bg-neutral-800 rounded-lg">
+                        <div class="text-4xl font-bold text-nfl-blue dark:text-nfl-red mb-2">121</div>
+                        <div class="text-sm">Millones de espectadores</div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Katy Perry (2015)</div>
+                    </div>
+                    
+                    <div class="text-center p-4 bg-gray-50 dark:bg-neutral-800 rounded-lg">
+                        <div class="text-4xl font-bold text-nfl-blue dark:text-nfl-red mb-2">$13M</div>
+                        <div class="text-sm">Costo promedio del show</div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Producción</div>
+                    </div>
+                    
+                    <div class="text-center p-4 bg-gray-50 dark:bg-neutral-800 rounded-lg">
+                        <div class="text-4xl font-bold text-nfl-blue dark:text-nfl-red mb-2">7</div>
+                        <div class="text-sm">Minutos de preparación</div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Para montar el escenario</div>
+                    </div>
+                </div>
+                
+                <h3 class="text-xl font-semibold mt-8 mb-4">Artistas más memorables</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <ul class="list-disc pl-5 space-y-2">
+                        <li><span class="font-semibold">Michael Jackson (1993)</span> - Revolucionó el show de medio tiempo con efectos especiales y coreografías</li>
+                        <li><span class="font-semibold">Prince (2007)</span> - Legendaria presentación bajo la lluvia con "Purple Rain"</li>
+                        <li><span class="font-semibold">Beyoncé (2013)</span> - Reconocida por su poderosa actuación y el blackout del estadio</li>
+                    </ul>
+                    <ul class="list-disc pl-5 space-y-2">
+                        <li><span class="font-semibold">Lady Gaga (2017)</span> - Impresionante entrada desde el techo del estadio</li>
+                        <li><span class="font-semibold">Dr. Dre, Snoop Dogg, Eminem (2022)</span> - Homenaje al hip-hop con actuación histórica</li>
+                        <li><span class="font-semibold">Rihanna (2023)</span> - Primer show después de 5 años de hiatus, anunció su embarazo</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Próximo Super Bowl -->
+        <section class="mb-16">
+            <div class="gradient-bg rounded-2xl p-8 text-center text-white shadow-xl">
+                <h2 class="text-2xl font-bold mb-4">Super Bowl LVIII</h2>
+                <p class="mb-6">11 de Febrero, 2024 • Allegiant Stadium, Las Vegas, Nevada</p>
+                <div class="flex flex-col sm:flex-row justify-center items-center gap-4">
+                    <div class="bg-white/20 p-4 rounded-lg">
+                        <div class="text-sm">Anfitrión</div>
+                        <div class="text-xl font-bold">Las Vegas Raiders</div>
+                    </div>
+                    <div class="bg-white/20 p-4 rounded-lg">
+                        <div class="text-sm">Estadio</div>
+                        <div class="text-xl font-bold">Allegiant Stadium</div>
+                    </div>
+                    <div class="bg-white/20 p-4 rounded-lg">
+                        <div class="text-sm">Capacidad</div>
+                        <div class="text-xl font-bold">65,000</div>
+                    </div>
+                    <div class="bg-white/20 p-4 rounded-lg">
+                        <div class="text-sm">Show Medio Tiempo</div>
+                        <div class="text-xl font-bold">Por anunciar</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quiz Interactivo -->
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-nfl-blue dark:text-nfl-red">Quiz del Super Bowl</h2>
+            
+            <div class="bg-white dark:bg-neutral-850 rounded-xl shadow-md p-6 border border-gray-100 dark:border-neutral-700">
+                <div x-data="{ currentQuestion: 0, score: 0, showScore: false, questions: [
+                    {
+                        question: '¿Qué equipo ganó el primer Super Bowl?',
+                        options: ['Green Bay Packers', 'Kansas City Chiefs', 'Dallas Cowboys', 'Pittsburgh Steelers'],
+                        correct: 0
+                    },
+                    {
+                        question: '¿Qué jugador tiene más MVP de Super Bowl?',
+                        options: ['Tom Brady', 'Joe Montana', 'Terry Bradshaw', 'Eli Manning'],
+                        correct: 0
+                    },
+                    {
+                        question: '¿Qué ciudad ha albergado más Super Bowls?',
+                        options: ['Miami', 'Nueva Orleans', 'Los Ángeles', 'Tampa'],
+                        correct: 1
+                    },
+                    {
+                        question: '¿Qué equipo perdió 4 Super Bowls consecutivos?',
+                        options: ['Denver Broncos', 'Minnesota Vikings', 'Buffalo Bills', 'New England Patriots'],
+                        correct: 2
+                    }
+                ]}">
+                    <template x-if="!showScore">
+                        <div>
+                            <h3 class="text-xl font-semibold mb-4" x-text="'Pregunta ' + (currentQuestion + 1) + ': ' + questions[currentQuestion].question"></h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <template x-for="(option, index) in questions[currentQuestion].options" :key="index">
+                                    <button 
+                                        @click="if(index === questions[currentQuestion].correct) score++; currentQuestion++; if(currentQuestion >= questions.length) showScore = true;" 
+                                        class="p-3 bg-gray-100 dark:bg-neutral-800 hover:bg-gray-200 dark:hover:bg-neutral-700 rounded-lg text-left"
+                                        x-text="option"
+                                    ></button>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                    
+                    <template x-if="showScore">
+                        <div class="text-center">
+                            <h3 class="text-xl font-semibold mb-4">¡Quiz completado!</h3>
+                            <p class="text-lg mb-4" x-text="'Obtuviste ' + score + ' de ' + questions.length + ' preguntas correctas'"></p>
+                            <button 
+                                @click="currentQuestion = 0; score = 0; showScore = false;" 
+                                class="bg-nfl-blue text-white px-6 py-2 rounded-lg hover:bg-nfl-red transition"
+                            >
+                                Intentar de nuevo
+                            </button>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-100 dark:bg-neutral-850 border-t border-gray-200 dark:border-neutral-700 py-12 mt-16">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center">
+                        <i class="fas fa-football mr-2 text-nfl-blue dark:text-nfl-red"></i>NFL Blog
+                    </h3>
+                    <p class="text-gray-600 dark:text-gray-300 text-sm">
+                        Tu fuente confiable de noticias, análisis y estadísticas de la National Football League.
+                    </p>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Secciones</h4>
+                    <ul class="space-y-2">
+                        <li><a href="index.html#inicio" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Inicio</a></li>
+                        <li><a href="equipos-nfl.html" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Equipos</a></li>
+                        <li><a href="jugadores-destacados.html" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Jugadores</a></li>
+                        <li><a href="index.html#articulos" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Artículos</a></li>
+                        <li><a href="calendario-resultados.html" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Calendario</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Super Bowl</h4>
+                    <ul class="space-y-2">
+                        <li><a href="super-bowl-historia.html" class="text-nfl-blue dark:text-nfl-red text-sm">Historia</a></li>
+                        <li><a href="#" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Récords</a></li>
+                        <li><a href="#" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">MVP's</a></li>
+                        <li><a href="#" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Shows</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Síguenos</h4>
+                    <div class="flex space-x-4 mb-6">
+                        <a href="#" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-nfl-red">
+                            <i class="fab fa-twitter text-lg"></i>
+                        </a>
+                        <a href="#" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-nfl-red">
+                            <i class="fab fa-facebook text-lg"></i>
+                        </a>
+                        <a href="#" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-nfl-red">
+                            <i class="fab fa-instagram text-lg"></i>
+                        </a>
+                        <a href="#" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-nfl-red">
+                            <i class="fab fa-youtube text-lg"></i>
+                        </a>
+                    </div>
+                    
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">Newsletter</h4>
+                    <div class="flex">
+                        <input type="email" placeholder="Tu email" class="px-3 py-2 border border-gray-300 dark:border-neutral-700 rounded-l text-sm w-full dark:bg-neutral-800">
+                        <button class="bg-nfl-blue text-white px-3 py-2 rounded-r text-sm">Suscribir</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-8 text-center text-gray-500 dark:text-gray-400 text-sm">
+                <p>© 2023 NFL Blog. Este sitio no está afiliado oficialmente con la NFL. Todas las marcas registradas son propiedad de sus respectivos dueños.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Función para gestionar la historia del Super Bowl
+        function superbowlHistory() {
+            return {
+                isDark: false,
+                featuredSuperBowls: [
+                    {
+                        id: 1,
+                        romanNumeral: 'III',
+                        title: 'Super Bowl III',
+                        date: 'Enero 12, 1969',
+                        venue: 'Orange Bowl, Miami',
+                        winner: 'New York Jets',
+                        winnerScore: 16,
+                        loser: 'Baltimore Colts',
+                        loserScore: 7,
+                        mvp: 'Joe Namath',
+                        highlight: 'La "garantía" de Joe Namath y la primera victoria de la AFL sobre la NFL.'
+                    },
+                    {
+                        id: 2,
+                        romanNumeral: 'XXV',
+                        title: 'Super Bowl XXV',
+                        date: 'Enero 27, 1991',
+                        venue: 'Tampa Stadium, Tampa',
+                        winner: 'New York Giants',
+                        winnerScore: 20,
+                        loser: 'Buffalo Bills',
+                        loserScore: 19,
+                        mvp: 'Ottis Anderson',
+                        highlight: 'El field goal fallado de Scott Norwood en los últimos segundos.'
+                    },
+                    {
+                        id: 3,
+                        romanNumeral: 'XXXIV',
+                        title: 'Super Bowl XXXIV',
+                        date: 'Enero 30, 2000',
+                        venue: 'Georgia Dome, Atlanta',
+                        winner: 'St. Louis Rams',
+                        winnerScore: 23,
+                        loser: 'Tennessee Titans',
+                        loserScore: 16,
+                        mvp: 'Kurt Warner',
+                        highlight: 'La tackleada en la yarda 1 a Kevin Dyson para ganar el partido.'
+                    },
+                    {
+                        id: 4,
+                        romanNumeral: 'XLII',
+                        title: 'Super Bowl XLII',
+                        date: 'Febrero 3, 2008',
+                        venue: 'University of Phoenix Stadium, Arizona',
+                        winner: 'New York Giants',
+                        winnerScore: 17,
+                        loser: 'New England Patriots',
+                        loserScore: 14,
+                        mvp: 'Eli Manning',
+                        highlight: 'El "Helmet Catch" de David Tyree que evitó la temporada perfecta de los Patriots.'
+                    },
+                    {
+                        id: 5,
+                        romanNumeral: 'LI',
+                        title: 'Super Bowl LI',
+                        date: 'Febrero 5, 2017',
+                        venue: 'NRG Stadium, Houston',
+                        winner: 'New England Patriots',
+                        winnerScore: 34,
+                        loser: 'Atlanta Falcons',
+                        loserScore: 28,
+                        mvp: 'Tom Brady',
+                        highlight: 'La mayor remontada en la historia del Super Bowl (25 puntos).'
+                    },
+                    {
+                        id: 6,
+                        romanNumeral: 'LVI',
+                        title: 'Super Bowl LVI',
+                        date: 'Febrero 13, 2022',
+                        venue: 'SoFi Stadium, Inglewood',
+                        winner: 'Los Angeles Rams',
+                        winnerScore: 23,
+                        loser: 'Cincinnati Bengals',
+                        loserScore: 20,
+                        mvp: 'Cooper Kupp',
+                        highlight: 'Los Rams ganan en su casa con una ofensiva liderada por Matthew Stafford y Cooper Kupp.'
+                    }
+                ],
+                init() {
+                    // Obtener el tema guardado o detectar la preferencia del sistema
+                    const savedTheme = localStorage.getItem('theme');
+                    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    
+                    this.isDark = savedTheme ? savedTheme === 'dark' : systemPrefersDark;
+                    
+                    // Aplicar el tema al inicializar
+                    this.applyTheme();
+                },
+                toggleTheme() {
+                    this.isDark = !this.isDark;
+                    this.applyTheme();
+                    localStorage.setItem('theme', this.isDark ? 'dark' : 'light');
+                },
+                applyTheme() {
+                    if (this.isDark) {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
+                }
+            }
+        }
+
+        // Barra de progreso de lectura
+        window.addEventListener('scroll', function() {
+            const winHeight = window.innerHeight;
+            const docHeight = document.documentElement.scrollHeight;
+            const scrollTop = window.pageYOffset;
+            const trackLength = docHeight - winHeight;
+            const progress = Math.floor((scrollTop / trackLength) * 100);
+            document.getElementById('reading-progress').style.width = progress + '%';
+        });
+
+        // Inicializar el tema al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ya está manejado por Alpine.js, pero por si acaso
+            const savedTheme = localStorage.getItem('theme');
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const isDark = savedTheme ? savedTheme === 'dark' : systemPrefersDark;
+            
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+    </script>
+</body>
+</html>

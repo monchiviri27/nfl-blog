@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Curiosidades del Super Bowl | NFL Blog</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        nfl: {
+                            blue: '#013369',
+                            red: '#D50A0A',
+                            silver: '#A5ACAF'
+                        },
+                        neutral: {
+                            850: '#1e1e1e',
+                            950: '#0f0f0f'
+                        }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- favicon -->
+    <link rel="icon" href="../favicon.png" type="image/x-icon">
+    <link rel="shortcut icon" href="../favicon.png" type="image/x-icon">
+    <style>
+        .article-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .article-card:hover {
+            transform: translateY(-5px);
+        }
+        .curiosity-card {
+            transition: all 0.3s ease;
+        }
+        .curiosity-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .dark .curiosity-card:hover {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #013369 0%, #D50A0A 100%);
+        }
+        .prose {
+            max-width: none;
+        }
+        .prose h2 {
+            font-weight: 700;
+            font-size: 1.5em;
+            margin-top: 2em;
+            margin-bottom: 1em;
+            color: #013369;
+        }
+        .dark .prose h2 {
+            color: #D50A0A;
+        }
+        .prose p {
+            margin-bottom: 1.25em;
+            line-height: 1.7;
+        }
+        .theme-transition * {
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+        .reading-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 4px;
+            background: linear-gradient(90deg, #013369, #D50A0A);
+            z-index: 9999;
+        }
+        .fact-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            background: linear-gradient(135deg, #013369 0%, #D50A0A 100%);
+            color: white;
+        }
+        .counter {
+            font-variant-numeric: tabular-nums;
+        }
+        .flip-card {
+            perspective: 1000px;
+        }
+        .flip-card-inner {
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .flip-card:hover .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+        .flip-card-front, .flip-card-back {
+            backface-visibility: hidden;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 12px;
+        }
+        .flip-card-back {
+            transform: rotateY(180deg);
+            background: linear-gradient(135deg, #013369 0%, #D50A0A 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+        }
+        .category-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            font-size: 0.7rem;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+        }
+        .hero-section {
+            height: 100vh;
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('https://images.unsplash.com/photo-1546519632-e8b8c9e6e6f5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2000&q=80');
+            background-size: cover;
+            background-position: center;
+        }
+        .scroll-indicator {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {transform: translateY(0) translateX(-50%);}
+            40% {transform: translateY(-20px) translateX(-50%);}
+            60% {transform: translateY(-10px) translateX(-50%);}
+        }
+    </style>
+</head>
+<body x-data="superBowlCuriosities()" x-bind:class="{'dark': isDark}" class="theme-transition bg-white dark:bg-neutral-950 text-gray-800 dark:text-gray-200">
+    <!-- Barra de progreso de lectura -->
+    <div class="reading-progress" id="reading-progress"></div>
+
+    <!-- Navegación fija -->
+    <nav class="fixed w-full bg-white/90 dark:bg-neutral-850/90 backdrop-blur-sm py-4 z-50 border-b border-gray-200 dark:border-neutral-700 shadow-sm">
+        <div class="container mx-auto px-4 flex justify-between items-center">
+            <a href="index.html" class="text-2xl font-bold text-nfl-blue dark:text-white flex items-center">
+                <i class="fas fa-football mr-2"></i>NFL Blog
+            </a>
+            
+            <div class="flex items-center space-x-6">
+                <a href="../index.html#inicio" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Inicio</a>
+                <a href="equipos-nfl.html" class="text-nfl-blue dark:text-nfl-red font-medium">Equipos</a>
+                <a href="../articulos/articulos.html#articulos" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Artículos</a>
+                <a href="../estadisticas.html#estadisticas" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Estadísticas</a>
+                <a href="../temporada/calendario-resultados.html#estadisticas" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Calendario</a>
+                
+                <!-- Selector de tema -->
+                <div class="flex items-center space-x-2">
+                    <span x-show="!isDark"><i class="fas fa-sun text-yellow-500"></i></span>
+                    <span x-show="isDark"><i class="fas fa-moon text-blue-300"></i></span>
+                    
+                    <button 
+                        @click="toggleTheme()"
+                        :aria-label="isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+                        class="w-12 h-6 bg-gray-300 dark:bg-nfl-blue rounded-full p-1 relative focus:outline-none focus:ring-2 focus:ring-nfl-blue"
+                    >
+                        <span class="w-4 h-4 bg-white dark:bg-gray-200 rounded-full shadow-md block transform transition-transform duration-300" :class="{'translate-x-6': isDark}"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section a pantalla completa -->
+    <section class="hero-section flex items-center justify-center text-center text-white">
+        <div class="container mx-auto px-4">
+            <h1 class="text-5xl md:text-7xl font-bold mb-6">Curiosidades del Super Bowl</h1>
+            <p class="text-xl md:text-2xl mb-10 max-w-3xl mx-auto">Descubre los datos más fascinantes, récords increíbles y momentos memorables del evento deportivo más grande de Estados Unidos.</p>
+            <div class="scroll-indicator">
+                <i class="fas fa-chevron-down text-3xl"></i>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contenido principal -->
+    <main class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Introducción -->
+        <section class="mb-16 pt-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold mb-4 text-nfl-blue dark:text-nfl-red">Datos que probablemente no conocías</h2>
+                <p class="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+                    El Super Bowl es mucho más que un partido de fútbol americano. Es un fenómeno cultural que genera datos y curiosidades tan fascinantes como el juego mismo.
+                </p>
+            </div>
+
+            <!-- Estadísticas impactantes -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
+                <div class="bg-white dark:bg-neutral-850 p-6 rounded-xl shadow-md border border-gray-100 dark:border-neutral-700 text-center">
+                    <div class="text-4xl font-bold text-nfl-blue dark:text-nfl-red mb-2 counter" x-text="numberOfSuperBowls"></div>
+                    <div class="text-sm">Super Bowls disputados</div>
+                </div>
+                <div class="bg-white dark:bg-neutral-850 p-6 rounded-xl shadow-md border border-gray-100 dark:border-neutral-700 text-center">
+                    <div class="text-4xl font-bold text-nfl-blue dark:text-nfl-red mb-2 counter">$7M</div>
+                    <div class="text-sm">Costo de 30s publicitario</div>
+                </div>
+                <div class="bg-white dark:bg-neutral-850 p-6 rounded-xl shadow-md border border-gray-100 dark:border-neutral-700 text-center">
+                    <div class="text-4xl font-bold text-nfl-blue dark:text-nfl-red mb-2 counter">1.4B</div>
+                    <div class="text-sm">Alitas de pollo consumidas</div>
+                </div>
+                <div class="bg-white dark:bg-neutral-850 p-6 rounded-xl shadow-md border border-gray-100 dark:border-neutral-700 text-center">
+                    <div class="text-4xl font-bold text-nfl-blue dark:text-nfl-red mb-2 counter">325M</div>
+                    <div class="text-sm">Galones de cerveza</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Categorías de curiosidades -->
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-nfl-blue dark:text-nfl-red">Curiosidades por Categorías</h2>
+            
+            <!-- Navegación por categorías -->
+            <div class="mb-10 bg-white dark:bg-neutral-850 rounded-xl shadow-md p-4 sticky top-20 z-10">
+                <h2 class="text-lg font-semibold mb-3 text-nfl-blue dark:text-nfl-red">Explora por categoría</h2>
+                <div class="flex flex-wrap gap-2">
+                    <button 
+                        @click="selectedCategory = 'all'" 
+                        :class="{'active': selectedCategory === 'all', 'bg-nfl-blue text-white': selectedCategory === 'all'}"
+                        class="px-3 py-1 rounded-lg bg-gray-100 dark:bg-neutral-800 hover:bg-nfl-blue hover:text-white dark:hover:bg-nfl-blue transition"
+                    >
+                        Todas
+                    </button>
+                    <button 
+                        @click="selectedCategory = 'comida'" 
+                        :class="{'active': selectedCategory === 'comida', 'bg-nfl-blue text-white': selectedCategory === 'comida'}"
+                        class="px-3 py-1 rounded-lg bg-gray-100 dark:bg-neutral-800 hover:bg-nfl-blue hover:text-white dark:hover:bg-nfl-blue transition"
+                    >
+                        Comida
+                    </button>
+                    <button 
+                        @click="selectedCategory = 'publicidad'" 
+                        :class="{'active': selectedCategory === 'publicidad', 'bg-nfl-blue text-white': selectedCategory === 'publicidad'}"
+                        class="px-3 py-1 rounded-lg bg-gray-100 dark:bg-neutral-800 hover:bg-nfl-blue hover:text-white dark:hover:bg-nfl-blue transition"
+                    >
+                        Publicidad
+                    </button>
+                    <button 
+                        @click="selectedCategory = 'records'" 
+                        :class="{'active': selectedCategory === 'records', 'bg-nfl-blue text-white': selectedCategory === 'records'}"
+                        class="px-3 py-1 rounded-lg bg-gray-100 dark:bg-neutral-800 hover:bg-nfl-blue hover:text-white dark:hover:bg-nfl-blue transition"
+                    >
+                        Récords
+                    </button>
+                    <button 
+                        @click="selectedCategory = 'entretenimiento'" 
+                        :class="{'active': selectedCategory === 'entretenimiento', 'bg-nfl-blue text-white': selectedCategory === 'entretenimiento'}"
+                        class="px-3 py-1 rounded-lg bg-gray-100 dark:bg-neutral-800 hover:bg-nfl-blue hover:text-white dark:hover:bg-nfl-blue transition"
+                    >
+                        Entretenimiento
+                    </button>
+                    <button 
+                        @click="selectedCategory = 'dinero'" 
+                        :class="{'active': selectedCategory === 'dinero', 'bg-nfl-blue text-white': selectedCategory === 'dinero'}"
+                        class="px-3 py-1 rounded-lg bg-gray-100 dark:bg-neutral-800 hover:bg-nfl-blue hover:text-white dark:hover:bg-nfl-blue transition"
+                    >
+                        Dinero
+                    </button>
+                </div>
+            </div>
+
+            <!-- Curiosidades -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <template x-for="curiosity in filteredCuriosities" :key="curiosity.id">
+                    <div class="curiosity-card bg-white dark:bg-neutral-850 rounded-xl overflow-hidden shadow-md border border-gray-100 dark:border-neutral-700">
+                        <div class="p-6">
+                            <div class="flex items-start mb-4">
+                                <div class="fact-icon mr-4">
+                                    <i class="fas" :class="curiosity.icon"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-xl font-bold mb-2" x-text="curiosity.title"></h3>
+                                    <span class="text-xs font-semibold px-2 py-1 rounded" 
+                                          :class="{
+                                              'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200': curiosity.category === 'comida',
+                                              'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200': curiosity.category === 'publicidad',
+                                              'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200': curiosity.category === 'records',
+                                              'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200': curiosity.category === 'entretenimiento',
+                                              'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200': curiosity.category === 'dinero'
+                                          }" 
+                                          x-text="curiosity.category === 'comida' ? 'Comida' : 
+                                                  curiosity.category === 'publicidad' ? 'Publicidad' : 
+                                                  curiosity.category === 'records' ? 'Récords' : 
+                                                  curiosity.category === 'entretenimiento' ? 'Entretenimiento' : 'Dinero'">
+                                    </span>
+                                </div>
+                            </div>
+                            <p class="text-gray-600 dark:text-gray-300" x-text="curiosity.description"></p>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </section>
+
+        <!-- Récords increíbles -->
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-nfl-blue dark:text-nfl-red">Récords Increíbles del Super Bowl</h2>
+            
+            <div class="bg-white dark:bg-neutral-850 rounded-xl shadow-md p-6 border border-gray-100 dark:border-neutral-700">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b border-gray-200 dark:border-neutral-700">
+                                <th class="text-left py-3">Récord</th>
+                                <th class="text-left py-3">Jugador/Equipo</th>
+                                <th class="text-left py-3">Año</th>
+                                <th class="text-left py-3">Dato</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b border-gray-100 dark:border-neutral-800">
+                                <td class="py-3 font-semibold">Más Super Bowls ganados</td>
+                                <td class="py-3">Tom Brady</td>
+                                <td class="py-3">2002-2021</td>
+                                <td class="py-3">7 títulos</td>
+                            </tr>
+                            <tr class="border-b border-gray-100 dark:border-neutral-800">
+                                <td class="py-3 font-semibold">MVP más veterano</td>
+                                <td class="py-3">Tom Brady</td>
+                                <td class="py-3">2021</td>
+                                <td class="py-3">43 años</td>
+                            </tr>
+                            <tr class="border-b border-gray-100 dark:border-neutral-800">
+                                <td class="py-3 font-semibold">MVP más joven</td>
+                                <td class="py-3">Tom Brady</td>
+                                <td class="py-3">2002</td>
+                                <td class="py-3">24 años</td>
+                            </tr>
+                            <tr class="border-b border-gray-100 dark:border-neutral-800">
+                                <td class="py-3 font-semibold">Más yardas passing</td>
+                                <td class="py-3">Tom Brady</td>
+                                <td class="py-3">2017</td>
+                                <td class="py-3">505 yardas</td>
+                            </tr>
+                            <tr class="border-b border-gray-100 dark:border-neutral-800">
+                                <td class="py-3 font-semibold">Más puntos anotados</td>
+                                <td class="py-3">San Francisco 49ers</td>
+                                <td class="py-3">1990</td>
+                                <td class="py-3">55 puntos</td>
+                            </tr>
+                            <tr>
+                                <td class="py-3 font-semibold">Mayor remontada</td>
+                                <td class="py-3">New England Patriots</td>
+                                <td class="py-3">2017</td>
+                                <td class="py-3">25 puntos (Super Bowl LI)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Publicidad y Comerciales -->
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-nfl-blue dark:text-nfl-red">Publicidad en el Super Bowl</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-white dark:bg-neutral-850 p-6 rounded-xl shadow-md border border-gray-100 dark:border-neutral-700">
+                    <h3 class="text-xl font-semibold mb-4 text-nfl-blue dark:text-nfl-red">Evolución del costo</h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span>1967</span>
+                            <span class="font-semibold">$42,000</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span>1980</span>
+                            <span class="font-semibold">$222,000</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span>1995</span>
+                            <span class="font-semibold">$1.15 millones</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span>2010</span>
+                            <span class="font-semibold">$3 millones</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span>2023</span>
+                            <span class="font-semibold text-nfl-red">$7 millones</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-neutral-850 p-6 rounded-xl shadow-md border border-gray-100 dark:border-neutral-700">
+                    <h3 class="text-xl font-semibold mb-4 text-nfl-blue dark:text-nfl-red">Comerciales más memorables</h3>
+                    <ul class="list-disc pl-5 space-y-2">
+                        <li><span class="font-semibold">1984 - Apple</span>: Introduciendo Macintosh</li>
+                        <li><span class="font-semibold">1995 - Budweiser</span>: "Frogs" (ranas)</li>
+                        <li><span class="font-semibold">2002 - Budweiser</span>: "Respect" (caballo Clydesdale)</li>
+                        <li><span class="font-semibold">2010 - Google</span>: "Parisian Love"</li>
+                        <li><span class="font-semibold">2011 - Volkswagen</span>: "The Force" (niño Darth Vader)</li>
+                        <li><span class="font-semibold">2022 - Coinbase</span>: Código QR rebotante</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Curiosidades interactivas -->
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-nfl-blue dark:text-nfl-red">Curiosidades Interactivas</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="flip-card h-64">
+                    <div class="flip-card-inner h-full">
+                        <div class="flip-card-front bg-white dark:bg-neutral-850 rounded-xl shadow-md border border-gray-100 dark:border-neutral-700 flex items-center justify-center">
+                            <div class="text-center p-4">
+                                <div class="fact-icon mx-auto mb-4">
+                                    <i class="fas fa-utensils"></i>
+                                </div>
+                                <h3 class="text-xl font-semibold">¿Sabías que...?</h3>
+                                <p class="text-gray-500 dark:text-gray-400 mt-2">Toca para descubrir</p>
+                            </div>
+                        </div>
+                        <div class="flip-card-back rounded-xl flex items-center justify-center">
+                            <p class="text-lg font-semibold">El día del Super Bowl es el segundo día de mayor consumo de comida en EE.UU., solo detrás del Día de Acción de Gracias</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flip-card h-64">
+                    <div class="flip-card-inner h-full">
+                        <div class="flip-card-front bg-white dark:bg-neutral-850 rounded-xl shadow-md border border-gray-100 dark:border-neutral-700 flex items-center justify-center">
+                            <div class="text-center p-4">
+                                <div class="fact-icon mx-auto mb-4">
+                                    <i class="fas fa-tv"></i>
+                                </div>
+                                <h3 class="text-xl font-semibold">¿Sabías que...?</h3>
+                                <p class="text-gray-500 dark:text-gray-400 mt-2">Toca para descubrir</p>
+                            </div>
+                        </div>
+                        <div class="flip-card-back rounded-xl flex items-center justify-center">
+                            <p class="text-lg font-semibold">El Super Bowl XLIX de 2015 es el programa más visto en la historia de la televisión estadounidense con 114.4 millones de espectadores</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flip-card h-64">
+                    <div class="flip-card-inner h-full">
+                        <div class="flip-card-front bg-white dark:bg-neutral-850 rounded-xl shadow-md border border-gray-100 dark:border-neutral-700 flex items-center justify-center">
+                            <div class="text-center p-4">
+                                <div class="fact-icon mx-auto mb-4">
+                                    <i class="fas fa-music"></i>
+                                </div>
+                                <h3 class="text-xl font-semibold">¿Sabías que...?</h3>
+                                <p class="text-gray-500 dark:text-gray-400 mt-2">Toca para descubrir</p>
+                            </div>
+                        </div>
+                        <div class="flip-card-back rounded-xl flex items-center justify-center">
+                            <p class="text-lg font-semibold">Los artistas no reciben pago por actuar en el show de medio tiempo, pero obtienen exposición masiva que aumenta sus ventas en un 50% en promedio</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quiz de curiosidades -->
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-nfl-blue dark:text-nfl-red">¿Cuánto sabes sobre el Super Bowl?</h2>
+            
+            <div class="bg-white dark:bg-neutral-850 rounded-xl shadow-md p-6 border border-gray-100 dark:border-neutral-700">
+                <div x-data="{ currentQuestion: 0, score: 0, showScore: false, questions: [
+                    {
+                        question: '¿Qué ciudad ha albergado más Super Bowls?',
+                        options: ['Miami', 'Nueva Orleans', 'Los Ángeles', 'Tampa'],
+                        correct: 1
+                    },
+                    {
+                        question: '¿Cuál fue el primer Super Bowl en tener un show de medio tiempo con un artista famoso?',
+                        options: ['Super Bowl I (1967)', 'Super Bowl X (1976)', 'Super Bowl XX (1986)', 'Super Bowl XXV (1991)'],
+                        correct: 1
+                    },
+                    {
+                        question: '¿Qué empresa ha publicitado en todos los Super Bowls desde el primero?',
+                        options: ['Coca-Cola', 'Budweiser', 'Nike', 'Ninguna, todas han faltado al menos una vez'],
+                        correct: 3
+                    },
+                    {
+                        question: '¿Qué jugador tiene el récord de más pases de touchdown en un solo Super Bowl?',
+                        options: ['Tom Brady', 'Joe Montana', 'Steve Young', 'Nick Foles'],
+                        correct: 2
+                    }
+                ]}">
+                    <template x-if="!showScore">
+                        <div>
+                            <h3 class="text-xl font-semibold mb-4" x-text="'Pregunta ' + (currentQuestion + 1) + ': ' + questions[currentQuestion].question"></h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <template x-for="(option, index) in questions[currentQuestion].options" :key="index">
+                                    <button 
+                                        @click="if(index === questions[currentQuestion].correct) score++; currentQuestion++; if(currentQuestion >= questions.length) showScore = true;" 
+                                        class="p-3 bg-gray-100 dark:bg-neutral-800 hover:bg-gray-200 dark:hover:bg-neutral-700 rounded-lg text-left"
+                                        x-text="option"
+                                    ></button>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                    
+                    <template x-if="showScore">
+                        <div class="text-center">
+                            <h3 class="text-xl font-semibold mb-4">¡Quiz completado!</h3>
+                            <p class="text-lg mb-4" x-text="'Obtuviste ' + score + ' de ' + questions.length + ' preguntas correctas'"></p>
+                            <button 
+                                @click="currentQuestion = 0; score = 0; showScore = false;" 
+                                class="bg-nfl-blue text-white px-6 py-2 rounded-lg hover:bg-nfl-red transition"
+                            >
+                                Intentar de nuevo
+                            </button>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-100 dark:bg-neutral-850 border-t border-gray-200 dark:border-neutral-700 py-12 mt-16">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center">
+                        <i class="fas fa-football mr-2 text-nfl-blue dark:text-nfl-red"></i>NFL Blog
+                    </h3>
+                    <p class="text-gray-600 dark:text-gray-300 text-sm">
+                        Tu fuente confiable de noticias, análisis y estadísticas de la National Football League.
+                    </p>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Secciones</h4>
+                    <ul class="space-y-2">
+                        <li><a href="index.html#inicio" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Inicio</a></li>
+                        <li><a href="equipos-nfl.html" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Equipos</a></li>
+                        <li><a href="jugadores-destacados.html" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Jugadores</a></li>
+                        <li><a href="articulos.html" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Artículos</a></li>
+                        <li><a href="calendario-resultados.html" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Calendario</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Super Bowl</h4>
+                    <ul class="space-y-2">
+                        <li><a href="super-bowl-historia.html" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Historia</a></li>
+                        <li><a href="super-bowl-curiosidades.html" class="text-nfl-blue dark:text-nfl-red text-sm">Curiosidades</a></li>
+                        <li><a href="#" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Récords</a></li>
+                        <li><a href="#" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">MVP's</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Síguenos</h4>
+                    <div class="flex space-x-4 mb-6">
+                        <a href="#" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-nfl-red">
+                            <i class="fab fa-twitter text-lg"></i>
+                        </a>
+                        <a href="#" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-nfl-red">
+                            <i class="fab fa-facebook text-lg"></i>
+                        </a>
+                        <a href="#" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-nfl-red">
+                            <i class="fab fa-instagram text-lg"></i>
+                        </a>
+                        <a href="#" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-nfl-red">
+                            <i class="fab fa-youtube text-lg"></i>
+                        </a>
+                    </div>
+                    
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">Newsletter</h4>
+                    <div class="flex">
+                        <input type="email" placeholder="Tu email" class="px-3 py-2 border border-gray-300 dark:border-neutral-700 rounded-l text-sm w-full dark:bg-neutral-800">
+                        <button class="bg-nfl-blue text-white px-3 py-2 rounded-r text-sm">Suscribir</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-8 text-center text-gray-500 dark:text-gray-400 text-sm">
+                <p>© 2023 NFL Blog. Este sitio no está afiliado oficialmente con la NFL. Todas las marcas registradas son propiedad de sus respectivos dueños.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Función para gestionar las curiosidades del Super Bowl
+        function superBowlCuriosities() {
+            return {
+                isDark: false,
+                selectedCategory: 'all',
+                numberOfSuperBowls: 57,
+                curiosities: [
+                    {
+                        id: 1,
+                        title: "El nombre 'Super Bowl' fue casi descartado",
+                        description: "El fundador de la AFL, Lamar Hunt, acuñó el término 'Super Bowl' después de ver a su hijo jugar con una pelota 'Super Ball'. A la NFL no le gustó el nombre y propuso alternativas como 'The Big One' o 'Pro Bowl', pero el nombre ya había calado entre los medios y fans.",
+                        category: "records",
+                        icon: "fa-trophy"
+                    },
+                    {
+                        id: 2,
+                        title: "Día de mayor consumo de comida después de Acción de Gracias",
+                        description: "El día del Super Bowl es el segundo día de mayor consumo de comida en EE.UU., solo superado por el Día de Acción de Gracias. Se consumen aproximadamente 1.4 mil millones de alitas de pollo, 11.2 millones de libras de papas fritas y 325 millones de galones de cerveza.",
+                        category: "comida",
+                        icon: "fa-utensils"
+                    },
+                    {
+                        id: 3,
+                        title: "Los comerciales más caros de la televisión",
+                        description: "Un comercial de 30 segundos durante el Super Bowl cuesta aproximadamente $7 millones en 2023. El primer Super Bowl en 1967 cobró $42,000 por un comercial de 30 segundos. Ajustado por inflación, eso sería alrededor de $330,000 hoy.",
+                        category: "publicidad",
+                        icon: "fa-tv"
+                    },
+                    {
+                        id: 4,
+                        title: "El show de medio tiempo no siempre fue un espectáculo",
+                        description: "Los primeros Super Bowls tenían shows de medio tiempo con bandas universitarias y artistas locales. No fue hasta 1993 con Michael Jackson que el show de medio tiempo se convirtió en el megaespectáculo que es hoy.",
+                        category: "entretenimiento",
+                        icon: "fa-music"
+                    },
+                    {
+                        id: 5,
+                        title: "Los anillos de campeón valen una fortuna",
+                        description: "Cada jugador del equipo ganador recibe un anillo cuyo valor puede superar los $30,000. Los diseños son únicos cada año y suelen incluir diamantes y el logo del equipo.",
+                        category: "dinero",
+                        icon: "fa-gem"
+                    },
+                    {
+                        id: 6,
+                        title: "Solo un equipo ha jugado en su estadio local",
+                        description: "En 2021, Tampa Bay Buccaneers se convirtió en el primer equipo en jugar un Super Bowl en su estadio local. Vencieron a Kansas City Chiefs 31-9.",
+                        category: "records",
+                        icon: "fa-home"
+                    },
+                    {
+                        id: 7,
+                        title: "El impacto económico es enorme",
+                        description: "La ciudad anfitriona del Super Bowl typically experimenta un impacto económico de entre $300-500 millones. Esto incluye hoteles, restaurantes, transporte y turismo.",
+                        category: "dinero",
+                        icon: "fa-dollar-sign"
+                    },
+                    {
+                        id: 8,
+                        title: "La audiencia global supera los 100 millones",
+                        description: "El Super Bowl es visto en más de 180 países y se traduce a 25 idiomas diferentes. La audiencia global supera regularmente los 100 millones de espectadores.",
+                        category: "records",
+                        icon: "fa-globe"
+                    },
+                    {
+                        id: 9,
+                        title: "Los boletos más caros de la historia",
+                        description: "Los boletos para el Super Bowl I costaban $12. En 2023, el precio promedio para un boleto en el mercado secundario superaba los $8,000, con algunos llegando a más de $30,000.",
+                        category: "dinero",
+                        icon: "fa-ticket-alt"
+                    },
+                    {
+                        id: 10,
+                        title: "Comida específica para el evento",
+                        description: "El 70% de los televidentes del Super Bowl compran comida específicamente para el evento. Las pizzas entregadas durante el Super Bowl equivalen a aproximadamente 4,000 campos de fútbol americano.",
+                        category: "comida",
+                        icon: "fa-pizza-slice"
+                    }
+                ],
+                init() {
+                    // Obtener el tema guardado o detectar la preferencia del sistema
+                    const savedTheme = localStorage.getItem('theme');
+                    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    
+                    this.isDark = savedTheme ? savedTheme === 'dark' : systemPrefersDark;
+                    
+                    // Aplicar el tema al inicializar
+                    this.applyTheme();
+                },
+                toggleTheme() {
+                    this.isDark = !this.isDark;
+                    this.applyTheme();
+                    localStorage.setItem('theme', this.isDark ? 'dark' : 'light');
+                },
+                applyTheme() {
+                    if (this.isDark) {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
+                },
+                get filteredCuriosities() {
+                    if (this.selectedCategory === 'all') return this.curiosities;
+                    return this.curiosities.filter(curiosity => curiosity.category === this.selectedCategory);
+                }
+            }
+        }
+
+        // Barra de progreso de lectura
+        window.addEventListener('scroll', function() {
+            const winHeight = window.innerHeight;
+            const docHeight = document.documentElement.scrollHeight;
+            const scrollTop = window.pageYOffset;
+            const trackLength = docHeight - winHeight;
+            const progress = Math.floor((scrollTop / trackLength) * 100);
+            document.getElementById('reading-progress').style.width = progress + '%';
+        });
+
+        // Inicializar el tema al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ya está manejado por Alpine.js, pero por si acaso
+            const savedTheme = localStorage.getItem('theme');
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const isDark = savedTheme ? savedTheme === 'dark' : systemPrefersDark;
+            
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+    </script>
+</body>
+</html>

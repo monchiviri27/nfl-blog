@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patrick Mahomes: ¿El mejor QB de la década? | NFL Blog</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        nfl: {
+                            blue: '#013369',
+                            red: '#D50A0A',
+                            silver: '#A5ACAF'
+                        },
+                        neutral: {
+                            850: '#1e1e1e',
+                            950: '#0f0f0f'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- favicon -->
+    <link rel="icon" href="../favicon.png" type="image/x-icon">
+    <link rel="shortcut icon" href="../favicon.png" type="image/x-icon">
+    <style>
+        .article-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .article-card:hover {
+            transform: translateY(-5px);
+        }
+        .prose {
+            max-width: none;
+        }
+        .prose h2 {
+            font-weight: 700;
+            font-size: 1.5em;
+            margin-top: 2em;
+            margin-bottom: 1em;
+            color: #013369;
+        }
+        .dark .prose h2 {
+            color: #D50A0A;
+        }
+        .prose p {
+            margin-bottom: 1.25em;
+            line-height: 1.7;
+        }
+        .prose blockquote {
+            border-left: 4px solid #D50A0A;
+            padding-left: 1.5em;
+            margin: 2em 0;
+            font-style: italic;
+        }
+        .dark .prose blockquote {
+            border-left-color: #013369;
+        }
+        .theme-transition * {
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+        .reading-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 4px;
+            background: linear-gradient(90deg, #013369, #D50A0A);
+            z-index: 9999;
+        }
+        .article-image {
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body x-data="themeHandler()" x-bind:class="{'dark': isDark}" class="theme-transition bg-white dark:bg-neutral-950 text-gray-800 dark:text-gray-200 min-h-screen">
+    <!-- Barra de progreso de lectura -->
+    <div class="reading-progress" id="reading-progress"></div>
+
+    <!-- Navegación fija -->
+    <nav class="fixed w-full bg-white/90 dark:bg-neutral-850/90 backdrop-blur-sm py-4 z-50 border-b border-gray-200 dark:border-neutral-700 shadow-sm">
+        <div class="container mx-auto px-4 flex justify-between items-center">
+            <a href="index.html" class="text-2xl font-bold text-nfl-blue dark:text-white flex items-center">
+                <i class="fas fa-football mr-2"></i>NFL Blog
+            </a>
+            
+            <div class="flex items-center space-x-6">
+                <a href="../index.html#inicio" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Inicio</a>
+                <a href="equipos-nfl.html" class="text-nfl-blue dark:text-nfl-red font-medium">Equipos</a>
+                <a href="../articulos/articulos.html#articulos" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Artículos</a>
+                <a href="../estadisticas.html#estadisticas" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Estadísticas</a>
+                <a href="../temporada/calendario-resultados.html#estadisticas" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Calendario</a>
+                
+                <!-- Selector de tema -->
+                <div class="flex items-center space-x-2">
+                    <span x-show="!isDark"><i class="fas fa-sun text-yellow-500"></i></span>
+                    <span x-show="isDark"><i class="fas fa-moon text-blue-300"></i></span>
+                    
+                    <button 
+                        @click="toggleTheme()"
+                        :aria-label="isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+                        class="w-12 h-6 bg-gray-300 dark:bg-nfl-blue rounded-full p-1 relative focus:outline-none focus:ring-2 focus:ring-nfl-blue"
+                    >
+                        <span class="w-4 h-4 bg-white dark:bg-gray-200 rounded-full shadow-md block transform transition-transform duration-300" :class="{'translate-x-6': isDark}"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Espacio para la navegación fija -->
+    <div class="h-20"></div>
+
+    <!-- Contenido principal del artículo -->
+    <main class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Ruta de navegación -->
+        <div class="text-sm text-gray-500 dark:text-gray-400 mb-6">
+            <a href="../index.html" class="hover:text-nfl-blue dark:hover:text-nfl-red">Inicio</a> > 
+            <a href="index.html#articulos" class="hover:text-nfl-blue dark:hover:text-nfl-red">Artículos</a> > 
+            <span class="text-gray-700 dark:text-gray-300">Patrick Mahomes</span>
+        </div>
+
+        <!-- Cabecera del artículo -->
+        <header class="mb-12">
+            <div class="flex items-center space-x-2 mb-4">
+                <span class="text-sm font-semibold bg-nfl-blue text-white px-2 py-1 rounded">Quarterbacks</span>
+                <span class="text-sm text-gray-500 dark:text-gray-400">12 Sept 2023</span>
+                <span class="text-sm text-gray-500 dark:text-gray-400">Por: Alejandro Martínez</span>
+            </div>
+            
+            <h1 class="text-4xl md:text-5xl font-bold mb-6">Patrick Mahomes: ¿El mejor QB de la década?</h1>
+            
+            <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-2">
+                    <i class="far fa-clock text-nfl-red"></i>
+                    <span class="text-sm text-gray-600 dark:text-gray-400">8 min de lectura</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <i class="far fa-eye text-nfl-red"></i>
+                    <span class="text-sm text-gray-600 dark:text-gray-400">2.4K visitas</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Imagen destacada -->
+        <div class="rounded-xl overflow-hidden shadow-xl mb-12">
+            <img src="https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" 
+     alt="Patrick Mahomes 2023" class="w-full h-96 object-cover">
+            <p class="text-center text-sm text-gray-500 dark:text-gray-400 mt-2">Patrick Mahomes en acción durante el Super Bowl LVII (Foto: NFL Photos)</p>
+        </div>
+
+        <!-- Contenido del artículo -->
+        <article class="prose prose-lg max-w-none dark:prose-invert">
+            <p class="text-xl font-medium text-gray-700 dark:text-gray-300 mb-6">En solo seis temporadas como titular, Patrick Mahomes ha revolucionado la posición de quarterback y acumulado logros que muchos jugadores no consiguen en toda su carrera. Analizamos si estamos ante el mejor mariscal de campo de la última década.</p>
+
+            <h2>Los números no mienten</h2>
+            
+            <p>Desde que se convirtió en titular en 2018, Mahomes ha acumulado estadísticas asombrosas que lo colocan en una trayectoria histórica. Su promedio de touchdowns por juego (2.4) es el más alto en la historia de la NFL, superando incluso a leyendas como Drew Brees y Peyton Manning.</p>
+            
+            <div class="bg-gray-100 dark:bg-neutral-850 p-6 rounded-xl my-8">
+                <h3 class="text-lg font-bold text-nfl-blue dark:text-nfl-red mb-4">Logros de Mahomes (2018-2023)</h3>
+                <ul class="space-y-2">
+                    <li class="flex items-start">
+                        <span class="text-nfl-red mr-2">•</span>
+                        <span>Dos MVP de la temporada regular (2018, 2022)</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-nfl-red mr-2">•</span>
+                        <span>Dos MVP del Super Bowl (LIV, LVII)</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-nfl-red mr-2">•</span>
+                        <span>Dos anillos de Super Bowl</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-nfl-red mr-2">•</span>
+                        <span>Seis Pro Bowls consecutivos</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-nfl-red mr-2">•</span>
+                        <span>Más de 24,000 yardas por pase</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-nfl-red mr-2">•</span>
+                        <span>192 touchdowns por pase</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <blockquote>
+                "Mahomes tiene una habilidad única para hacer jugadas que simplemente no enseñamos. Es un talento generacional que redefine lo que es posible desde la posición de quarterback." - Andy Reid, entrenador de los Chiefs
+            </blockquote>
+            
+            <h2>Comparación con sus contemporáneos</h2>
+            
+            <p>Cuando comparamos a Mahomes con otros quarterbacks elite de la última década, surgen diferencias significativas en eficiencia y éxito en playoffs:</p>
+            
+            <div class="overflow-x-auto my-8">
+                <table class="min-w-full bg-white dark:bg-neutral-850 rounded-lg overflow-hidden shadow-md">
+                    <thead class="bg-nfl-blue text-white">
+                        <tr>
+                            <th class="py-3 px-4 text-left">Jugador</th>
+                            <th class="py-3 px-4">TD/Int Ratio</th>
+                            <th class="py-3 px-4">Passer Rating</th>
+                            <th class="py-3 px-4">% de Completados</th>
+                            <th class="py-3 px-4">Super Bowls</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-700 dark:text-gray-300">
+                        <tr class="border-b border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800">
+                            <td class="py-3 px-4 font-medium">Patrick Mahomes</td>
+                            <td class="py-3 px-4 text-center">4.21</td>
+                            <td class="py-3 px-4 text-center">105.7</td>
+                            <td class="py-3 px-4 text-center">66.3%</td>
+                            <td class="py-3 px-4 text-center">2</td>
+                        </tr>
+                        <tr class="border-b border-gray-200 dark:border-neutral-700">
+                            <td class="py-3 px-4 font-medium">Aaron Rodgers</td>
+                            <td class="py-3 px-4 text-center">4.79</td>
+                            <td class="py-3 px-4 text-center">103.6</td>
+                            <td class="py-3 px-4 text-center">65.3%</td>
+                            <td class="py-3 px-4 text-center">1</td>
+                        </tr>
+                        <tr class="border-b border-gray-200 dark:border-neutral-700">
+                            <td class="py-3 px-4 font-medium">Tom Brady</td>
+                            <td class="py-3 px-4 text-center">3.09</td>
+                            <td class="py-3 px-4 text-center">97.2</td>
+                            <td class="py-3 px-4 text-center">64.3%</td>
+                            <td class="py-3 px-4 text-center">3</td>
+                        </tr>
+                        <tr>
+                            <td class="py-3 px-4 font-medium">Russell Wilson</td>
+                            <td class="py-3 px-4 text-center">2.93</td>
+                            <td class="py-3 px-4 text-center">100.0</td>
+                            <td class="py-3 px-4 text-center">64.7%</td>
+                            <td class="py-3 px-4 text-center">1</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <h2>El factor postseason</h2>
+            
+            <p>Donde Mahomes realmente se separa del resto es en su desempeño en playoffs. En sus seis temporadas, ha llevado a los Chiefs a:</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-8">
+                <div class="bg-nfl-blue text-white p-4 rounded-lg text-center">
+                    <div class="text-3xl font-bold mb-2">5</div>
+                    <div class="text-sm">Finales de Conferencia consecutivas</div>
+                </div>
+                <div class="bg-nfl-red text-white p-4 rounded-lg text-center">
+                    <div class="text-3xl font-bold mb-2">3</div>
+                    <div class="text-sm">Super Bowls</div>
+                </div>
+                <div class="bg-gray-800 text-white p-4 rounded-lg text-center">
+                    <div class="text-3xl font-bold mb-2">2</div>
+                    <div class="text-sm">Victorias en Super Bowl</div>
+                </div>
+            </div>
+            
+            <p>Su récord en playoffs es de 11-3, con un passer rating de 106.3, superior a su ya impresionante rating de temporada regular. Esta capacidad de elevar su juego en los momentos cruciales es lo que define a los grandes quarterbacks de la historia.</p>
+            
+            <div class="my-8">
+                <img src="/Users/andreabazurto6/Desktop/apps_portafolio/blogs/nfl_blog/assets/images/patrick_mahomes1.jpg" 
+                     alt="Mahomes en playoffs" class="w-full h-64 object-cover rounded-xl article-image">
+                <p class="text-center text-sm text-gray-500 dark:text-gray-400 mt-2">Mahomes celebra después de anotar un touchdown en playoffs (Foto: NFL Photos)</p>
+            </div>
+            
+            <h2>Impacto beyond las estadísticas</h2>
+            
+            <p>Más allá de los números, Mahomes ha cambiado la forma en que se juega la posición de quarterback:</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 my-8">
+                <div class="bg-white dark:bg-neutral-850 p-4 rounded-lg shadow-md border border-gray-100 dark:border-neutral-700">
+                    <div class="text-nfl-blue dark:text-nfl-red text-2xl mb-2"><i class="fas fa-random"></i></div>
+                    <h3 class="font-bold mb-2">Improvisación</h3>
+                    <p class="text-sm">Su capacidad para extender jugadas y realizar pases desde ángulos imposibles ha forzado a defensas a replantear sus estrategias.</p>
+                </div>
+                <div class="bg-white dark:bg-neutral-850 p-4 rounded-lg shadow-md border border-gray-100 dark:border-neutral-700">
+                    <div class="text-nfl-blue dark:text-nfl-red text-2xl mb-2"><i class="fas fa-hands"></i></div>
+                    <h3 class="font-bold mb-2">Armado ambidiestro</h3>
+                    <p class="text-sm">Aunque es diestro, Mahomes ha completado pases clave con su mano izquierda, algo extremadamente raro en la NFL.</p>
+                </div>
+                <div class="bg-white dark:bg-neutral-850 p-4 rounded-lg shadow-md border border-gray-100 dark:border-neutral-700">
+                    <div class="text-nfl-blue dark:text-nfl-red text-2xl mb-2"><i class="fas fa-eye-slash"></i></div>
+                    <h3 class="font-bold mb-2">No-look passes</h3>
+                    <p class="text-sm">Popularizó los pases sin mirar, una habilidad que pocos quarterbacks se atreven a intentar en juegos oficiales.</p>
+                </div>
+            </div>
+            
+            <p>Estas habilidades no tradicionales han inspirado a una nueva generación de quarterbacks jóvenes que intentan emular su estilo de juego, cambiando permanentemente cómo se desarrolla la posición a nivel universitario y profesional.</p>
+            
+            <h2>Conclusión: ¿El mejor de la década?</h2>
+            
+            <p>Aunque Tom Brady ganó tres Super Bowls en la década de 2010 y mantuvo un nivel de excelencia consistente, el impacto inmediato y transformador de Mahomes en la posición de quarterback es innegable.</p>
+            
+            <p>Considerando que:</p>
+            <ul class="my-4">
+                <li class="mb-2">Su éxito comenzó inmediatamente al convertirse en titular</li>
+                <li class="mb-2">Ha mantenido a Kansas City como contendiente anual desde su primera temporada</li>
+                <li class="mb-2">Ha revolucionado aspectos técnicos de la posición</li>
+                <li>Sus estadísticas están entre las mejores de la historia para esta etapa de carrera</li>
+            </ul>
+            
+            <p>Podemos afirmar que, aunque Brady tuvo más éxito en términos de campeonatos durante la década anterior, Patrick Mahomes es sin duda el quarterback más impactante y dominante de los últimos años, posicionándose como el jugador definitorio de esta era de la NFL.</p>
+            
+            <div class="bg-gradient-to-r from-nfl-blue to-nfl-red p-1 rounded-xl my-8">
+                <div class="bg-white dark:bg-neutral-900 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-nfl-blue dark:text-nfl-red mb-4">¿Qué sigue para Mahomes?</h3>
+                    <p>Con solo 27 años, lo más aterrador para el resto de la liga es que probablemente aún no ha alcanzado su mejor versión. Su combinación de talento, ética de trabajo y mentalidad competitiva sugiere que podría desafiar los récords de longevidad y éxito que actualmente ostenta Tom Brady.</p>
+                </div>
+            </div>
+        </article>
+
+        <!-- Etiquetas y compartir -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mt-12 pt-8 border-t border-gray-200 dark:border-neutral-700">
+            <div class="mb-4 md:mb-0">
+                <span class="text-sm text-gray-600 dark:text-gray-400 mr-2">Etiquetas:</span>
+                <a href="#" class="text-sm bg-gray-100 dark:bg-neutral-800 text-nfl-blue dark:text-nfl-red px-3 py-1 rounded-full mr-2">Kansas City Chiefs</a>
+                <a href="#" class="text-sm bg-gray-100 dark:bg-neutral-800 text-nfl-blue dark:text-nfl-red px-3 py-1 rounded-full mr-2">Quarterbacks</a>
+                <a href="#" class="text-sm bg-gray-100 dark:bg-neutral-800 text-nfl-blue dark:text-nfl-red px-3 py-1 rounded-full">Super Bowl</a>
+            </div>
+            
+            <div class="flex space-x-4">
+                <span class="text-sm text-gray-600 dark:text-gray-400">Compartir:</span>
+                <a href="#" class="text-gray-500 hover:text-nfl-blue dark:hover:text-nfl-red"><i class="fab fa-twitter"></i></a>
+                <a href="#" class="text-gray-500 hover:text-nfl-blue dark:hover:text-nfl-red"><i class="fab fa-facebook"></i></a>
+                <a href="#" class="text-gray-500 hover:text-nfl-blue dark:hover:text-nfl-red"><i class="fab fa-linkedin"></i></a>
+                <a href="#" class="text-gray-500 hover:text-nfl-blue dark:hover:text-nfl-red"><i class="fab fa-whatsapp"></i></a>
+            </div>
+        </div>
+
+        <!-- Artículos relacionados -->
+        <section class="mt-16">
+            <h2 class="text-2xl font-bold mb-8 border-l-4 border-nfl-blue dark:border-nfl-red pl-3">Artículos Relacionados</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <article class="article-card bg-white dark:bg-neutral-850 rounded-lg overflow-hidden shadow-md hover:shadow-lg border border-gray-100 dark:border-neutral-700">
+                    <img src="/Users/andreabazurto6/Desktop/apps_portafolio/blogs/nfl_blog/assets/images/patrick_mahomes1.jpg" 
+                         alt="Andy Reid" class="w-full h-40 object-cover">
+                    <div class="p-4">
+                        <span class="text-xs text-gray-500 dark:text-gray-400">5 Sept 2023</span>
+                        <h3 class="text-lg font-bold mt-1 mb-2">Andy Reid: El genio detrás del éxito de Mahomes</h3>
+                        <a href="#" class="text-nfl-blue dark:text-nfl-red hover:underline text-sm font-medium">Leer más</a>
+                    </div>
+                </article>
+                
+                <article class="article-card bg-white dark:bg-neutral-850 rounded-lg overflow-hidden shadow-md hover:shadow-lg border border-gray-100 dark:border-neutral-700">
+                    <img src="/Users/andreabazurto6/Desktop/apps_portafolio/blogs/nfl_blog/assets/images/patrick_mahomes1.jpg" 
+                         alt="Comparación QBs" class="w-full h-40 object-cover">
+                    <div class="p-4">
+                        <span class="text-xs text-gray-500 dark:text-gray-400">28 Ago 2023</span>
+                        <h3 class="text-lg font-bold mt-1 mb-2">Mahomes vs. Brady: Análisis comparativo a los 27 años</h3>
+                        <a href="#" class="text-nfl-blue dark:text-nfl-red hover:underline text-sm font-medium">Leer más</a>
+                    </div>
+                </article>
+                
+                <article class="article-card bg-white dark:bg-neutral-850 rounded-lg overflow-hidden shadow-md hover:shadow-lg border border-gray-100 dark:border-neutral-700">
+                    <img src="/Users/andreabazurto6/Desktop/apps_portafolio/blogs/nfl_blog/assets/images/patrick_mahomes1.jpg" 
+                         alt="Arrowhead Stadium" class="w-full h-40 object-cover">
+                    <div class="p-4">
+                        <span class="text-xs text-gray-500 dark:text-gray-400">20 Ago 2023</span>
+                        <h3 class="text-lg font-bold mt-1 mb-2">Cómo Arrowhead se convirtió en la fortaleza más temida de la NFL</h3>
+                        <a href="#" class="text-nfl-blue dark:text-nfl-red hover:underline text-sm font-medium">Leer más</a>
+                    </div>
+                </article>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-100 dark:bg-neutral-850 border-t border-gray-200 dark:border-neutral-700 py-12 mt-16">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center">
+                        <i class="fas fa-football mr-2 text-nfl-blue dark:text-nfl-red"></i>NFL Blog
+                    </h3>
+                    <p class="text-gray-600 dark:text-gray-300 text-sm">
+                        Tu fuente confiable de noticias, análisis y estadísticas de la National Football League.
+                    </p>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Secciones</h4>
+                    <ul class="space-y-2">
+                        <li><a href="index.html" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Inicio</a></li>
+                        <li><a href="index.html#equipos" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Equipos</a></li>
+                        <li><a href="index.html#articulos" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Artículos</a></li>
+                        <li><a href="index.html#estadisticas" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Estadísticas</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Equipos</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">AFC Oeste</a></li>
+                        <li><a href="#" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">NFC Este</a></li>
+                        <li><a href="#" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">AFC Norte</a></li>
+                        <li><a href="#" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">NFC Oeste</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Síguenos</h4>
+                    <div class="flex space-x-4 mb-6">
+                        <a href="#" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-nfl-red">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="#" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-nfl-red">
+                            <i class="fab fa-facebook"></i>
+                        </a>
+                        <a href="#" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-nfl-red">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="#" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-nfl-red">
+                            <i class="fab fa-youtube"></i>
+                        </a>
+                    </div>
+                    
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mt-6 mb-2">Newsletter</h4>
+                    <div class="flex">
+                        <input type="email" placeholder="Tu email" class="px-3 py-2 border border-gray-300 dark:border-neutral-700 rounded-l text-sm w-full dark:bg-neutral-800">
+                        <button class="bg-nfl-blue text-white px-3 py-2 rounded-r text-sm">Suscribir</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-8 text-center text-gray-500 dark:text-gray-400 text-sm">
+                <p>© 2023 NFL Blog. Este sitio no está afiliado oficialmente con la NFL. Todas las marcas registradas son propiedad de sus respectivos dueños.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Función para gestionar el tema con Alpine.js
+        function themeHandler() {
+            return {
+                isDark: false,
+                init() {
+                    // Obtener el tema guardado o detectar la preferencia del sistema
+                    const savedTheme = localStorage.getItem('theme');
+                    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    
+                    this.isDark = savedTheme ? savedTheme === 'dark' : systemPrefersDark;
+                    
+                    // Aplicar el tema al inicializar
+                    this.applyTheme();
+                },
+                toggleTheme() {
+                    this.isDark = !this.isDark;
+                    this.applyTheme();
+                    localStorage.setItem('theme', this.isDark ? 'dark' : 'light');
+                },
+                applyTheme() {
+                    if (this.isDark) {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
+                }
+            }
+        }
+
+        // Barra de progreso de lectura
+        window.addEventListener('scroll', function() {
+            const winHeight = window.innerHeight;
+            const docHeight = document.documentElement.scrollHeight;
+            const scrollTop = window.pageYOffset;
+            const trackLength = docHeight - winHeight;
+            const progress = Math.floor((scrollTop / trackLength) * 100);
+            const progressBar = document.getElementById('reading-progress');
+            if (progressBar) {
+                progressBar.style.width = progress + '%';
+            }
+        });
+
+        // Inicializar el tema al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ya está manejado por Alpine.js, pero por si acaso
+            const savedTheme = localStorage.getItem('theme');
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const isDark = savedTheme ? savedTheme === 'dark' : systemPrefersDark;
+            
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+    </script>
+</body>
+</html>

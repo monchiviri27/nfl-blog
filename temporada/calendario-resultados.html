@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendario NFL 2023 | NFL Blog</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        nfl: {
+                            blue: '#013369',
+                            red: '#D50A0A',
+                            silver: '#A5ACAF'
+                        },
+                        neutral: {
+                            850: '#1e1e1e',
+                            950: '#0f0f0f'
+                        }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- favicon -->
+    <link rel="icon" href="../favicon.png" type="image/x-icon">
+    <link rel="shortcut icon" href="../favicon.png" type="image/x-icon">
+    <style>
+        .article-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .article-card:hover {
+            transform: translateY(-5px);
+        }
+        .game-card {
+            transition: all 0.3s ease;
+        }
+        .game-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.1);
+        }
+        .dark .game-card:hover {
+            box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.3);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #013369 0%, #D50A0A 100%);
+        }
+        .prose {
+            max-width: none;
+        }
+        .prose h2 {
+            font-weight: 700;
+            font-size: 1.5em;
+            margin-top: 2em;
+            margin-bottom: 1em;
+            color: #013369;
+        }
+        .dark .prose h2 {
+            color: #D50A0A;
+        }
+        .prose p {
+            margin-bottom: 1.25em;
+            line-height: 1.7;
+        }
+        .theme-transition * {
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+        .reading-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 4px;
+            background: linear-gradient(90deg, #013369, #D50A0A);
+            z-index: 9999;
+        }
+        .week-selector {
+            transition: all 0.3s ease;
+        }
+        .week-selector.active {
+            background: linear-gradient(135deg, #013369 0%, #D50A0A 100%);
+            color: white;
+        }
+        .team-logo-small {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+        }
+        .standing-row {
+            transition: background-color 0.3s ease;
+        }
+        .standing-row:hover {
+            background-color: #f3f4f6;
+        }
+        .dark .standing-row:hover {
+            background-color: #374151;
+        }
+        .playoff-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #10B981;
+        }
+        .game-live {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        .tab-button {
+            transition: all 0.3s ease;
+        }
+        .tab-button.active {
+            border-bottom: 3px solid #D50A0A;
+        }
+        .dark .tab-button.active {
+            border-bottom: 3px solid #013369;
+        }
+    </style>
+</head>
+<body x-data="nflSchedule()" x-bind:class="{'dark': isDark}" class="theme-transition bg-white dark:bg-neutral-950 text-gray-800 dark:text-gray-200 min-h-screen">
+    <!-- Barra de progreso de lectura -->
+    <div class="reading-progress" id="reading-progress"></div>
+
+    <!-- Navegación fija -->
+    <nav class="fixed w-full bg-white/90 dark:bg-neutral-850/90 backdrop-blur-sm py-4 z-50 border-b border-gray-200 dark:border-neutral-700 shadow-sm">
+        <div class="container mx-auto px-4 flex justify-between items-center">
+            <a href="index.html" class="text-2xl font-bold text-nfl-blue dark:text-white flex items-center">
+                <i class="fas fa-football mr-2"></i>NFL Blog
+            </a>
+            
+            <div class="flex items-center space-x-6">
+                <a href="../index.html" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Inicio</a>
+                <a href="../equipos/equipos-nfl.html" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Equipos</a>
+                <a href="../estadisticas.html#estadisticas" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Estadísticas</a>
+                <a href="../articulos/articulos.html" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Artículos</a>
+                <a href="#inicio" class="text-nfl-blue dark:text-nfl-red font-medium">Calendario</a>
+                
+                <!-- Selector de tema -->
+                <div class="flex items-center space-x-2">
+                    <span x-show="!isDark"><i class="fas fa-sun text-yellow-500"></i></span>
+                    <span x-show="isDark"><i class="fas fa-moon text-blue-300"></i></span>
+                    
+                    <button 
+                        @click="toggleTheme()"
+                        :aria-label="isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+                        class="w-12 h-6 bg-gray-300 dark:bg-nfl-blue rounded-full p-1 relative focus:outline-none focus:ring-2 focus:ring-nfl-blue"
+                    >
+                        <span class="w-4 h-4 bg-white dark:bg-gray-200 rounded-full shadow-md block transform transition-transform duration-300" :class="{'translate-x-6': isDark}"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Espacio para la navegación fija -->
+    <div class="h-20"></div>
+
+    <!-- Contenido principal -->
+    <main class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Encabezado de la página -->
+        <div class="mb-8 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold text-nfl-blue dark:text-nfl-red mb-4">Calendario NFL 2023</h1>
+            <p class="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+                Todos los partidos, resultados y tablas de posiciones de la temporada 2023 de la NFL.
+            </p>
+        </div>
+
+        <!-- Selector de pestañas -->
+        <div class="mb-8 flex border-b border-gray-200 dark:border-neutral-700">
+            <button 
+                @click="activeTab = 'calendar'" 
+                :class="{'active': activeTab === 'calendar', 'text-nfl-blue dark:text-nfl-red': activeTab === 'calendar'}"
+                class="tab-button px-6 py-3 font-medium"
+            >
+                Calendario
+            </button>
+            <button 
+                @click="activeTab = 'standings'" 
+                :class="{'active': activeTab === 'standings', 'text-nfl-blue dark:text-nfl-red': activeTab === 'standings'}"
+                class="tab-button px-6 py-3 font-medium"
+            >
+                Clasificaciones
+            </button>
+            <button 
+                @click="activeTab = 'playoffs'" 
+                :class="{'active': activeTab === 'playoffs', 'text-nfl-blue dark:text-nfl-red': activeTab === 'playoffs'}"
+                class="tab-button px-6 py-3 font-medium"
+            >
+                Playoffs
+            </button>
+        </div>
+
+        <!-- Pestaña de Calendario -->
+        <div x-show="activeTab === 'calendar'" class="mb-12">
+            <!-- Selector de semana -->
+            <div class="mb-8 bg-white dark:bg-neutral-850 rounded-xl shadow-md p-4 sticky top-20 z-10">
+                <h2 class="text-lg font-semibold mb-3 text-nfl-blue dark:text-nfl-red">Selecciona una semana</h2>
+                <div class="flex flex-wrap gap-2">
+                    <template x-for="week in weeks" :key="week">
+                        <button 
+                            @click="selectedWeek = week" 
+                            :class="{'active': selectedWeek === week}"
+                            class="week-selector px-4 py-2 rounded-lg bg-gray-100 dark:bg-neutral-800 hover:bg-gray-200 dark:hover:bg-neutral-700"
+                            x-text="'Semana ' + week"
+                        ></button>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Partidos de la semana seleccionada -->
+            <div>
+                <h2 class="text-2xl font-bold mb-6 text-nfl-blue dark:text-nfl-red" x-text="'Partidos - Semana ' + selectedWeek"></h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <template x-for="game in getGamesByWeek(selectedWeek)" :key="game.id">
+                        <div class="game-card bg-white dark:bg-neutral-850 rounded-xl p-5 shadow-md border border-gray-100 dark:border-neutral-700">
+                            <div class="flex justify-between items-center mb-4">
+                                <span class="text-sm text-gray-500 dark:text-gray-400" x-text="game.date"></span>
+                                <span class="text-sm text-gray-500 dark:text-gray-400" x-text="game.time"></span>
+                                <span class="text-xs font-semibold px-2 py-1 rounded" 
+                                      :class="{
+                                          'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200': game.status === 'final',
+                                          'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200': game.status === 'live',
+                                          'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200': game.status === 'scheduled'
+                                      }"
+                                      x-text="game.status === 'final' ? 'Finalizado' : game.status === 'live' ? 'En Vivo' : 'Programado'">
+                                </span>
+                            </div>
+                            
+                            <div class="flex justify-between items-center mb-4">
+                                <div class="flex items-center">
+                                    <div class="team-logo-small mr-3" :style="'background: ' + game.awayTeam.color" x-text="game.awayTeam.abbr"></div>
+                                    <div>
+                                        <div class="font-semibold" x-text="game.awayTeam.name"></div>
+                                        <div class="text-sm text-gray-500 dark:text-gray-400" x-text="game.awayTeam.record"></div>
+                                    </div>
+                                </div>
+                                <div class="text-center" x-show="game.status !== 'scheduled'">
+                                    <div class="text-2xl font-bold" x-text="game.awayScore"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex justify-between items-center mb-4">
+                                <div class="flex items-center">
+                                    <div class="team-logo-small mr-3" :style="'background: ' + game.homeTeam.color" x-text="game.homeTeam.abbr"></div>
+                                    <div>
+                                        <div class="font-semibold" x-text="game.homeTeam.name"></div>
+                                        <div class="text-sm text-gray-500 dark:text-gray-400" x-text="game.homeTeam.record"></div>
+                                    </div>
+                                </div>
+                                <div class="text-center" x-show="game.status !== 'scheduled'">
+                                    <div class="text-2xl font-bold" x-text="game.homeScore"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="text-center pt-3 border-t border-gray-100 dark:border-neutral-700">
+                                <span class="text-sm text-gray-500 dark:text-gray-400" x-text="game.venue"></span>
+                                <div x-show="game.status === 'live'" class="mt-2 game-live">
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                                        <span class="h-2 w-2 bg-red-500 rounded-full mr-1"></span>
+                                        En vivo
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pestaña de Clasificaciones -->
+        <div x-show="activeTab === 'standings'" class="mb-12">
+            <h2 class="text-2xl font-bold mb-6 text-nfl-blue dark:text-nfl-red">Clasificaciones de la NFL</h2>
+            
+            <!-- Selector de conferencia -->
+            <div class="mb-6 flex bg-gray-100 dark:bg-neutral-800 p-1 rounded-lg">
+                <button 
+                    @click="selectedConference = 'AFC'" 
+                    :class="{'bg-white dark:bg-neutral-700 shadow-sm': selectedConference === 'AFC'}"
+                    class="flex-1 py-2 text-center font-medium rounded-md"
+                >
+                    AFC
+                </button>
+                <button 
+                    @click="selectedConference = 'NFC'" 
+                    :class="{'bg-white dark:bg-neutral-700 shadow-sm': selectedConference === 'NFC'}"
+                    class="flex-1 py-2 text-center font-medium rounded-md"
+                >
+                    NFC
+                </button>
+            </div>
+            
+            <!-- Tabla de clasificación -->
+            <div class="bg-white dark:bg-neutral-850 rounded-xl shadow-md overflow-hidden">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 p-6">
+                    <template x-for="division in getDivisionsByConference(selectedConference)" :key="division">
+                        <div>
+                            <h3 class="text-lg font-semibold mb-4 text-nfl-blue dark:text-nfl-red" x-text="division"></h3>
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="border-b border-gray-200 dark:border-neutral-700">
+                                        <th class="text-left pb-2 text-sm font-medium">Equipo</th>
+                                        <th class="text-center pb-2 text-sm font-medium">G</th>
+                                        <th class="text-center pb-2 text-sm font-medium">P</th>
+                                        <th class="text-center pb-2 text-sm font-medium">E</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template x-for="team in getTeamsByDivision(selectedConference, division)" :key="team.id">
+                                        <tr class="standing-row border-b border-gray-100 dark:border-neutral-800">
+                                            <td class="py-3">
+                                                <div class="flex items-center">
+                                                    <div class="team-logo-small mr-2" :style="'background: ' + team.color" x-text="team.abbr"></div>
+                                                    <span class="font-medium" x-text="team.name"></span>
+                                                    <span x-show="team.playoff" class="playoff-indicator ml-2"></span>
+                                                </div>
+                                            </td>
+                                            <td class="text-center py-3 font-semibold" x-text="team.wins"></td>
+                                            <td class="text-center py-3" x-text="team.losses"></td>
+                                            <td class="text-center py-3" x-text="team.ties"></td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pestaña de Playoffs -->
+        <div x-show="activeTab === 'playoffs'" class="mb-12">
+            <h2 class="text-2xl font-bold mb-6 text-nfl-blue dark:text-nfl-red">Escenario de Playoffs</h2>
+            
+            <div class="bg-white dark:bg-neutral-850 rounded-xl shadow-md p-6 border border-gray-100 dark:border-neutral-700">
+                <div class="text-center mb-8">
+                    <div class="gradient-bg text-white rounded-lg py-3 px-6 inline-block">
+                        <span class="font-semibold">Playoffs de la NFL</span>
+                        <span class="mx-2">•</span>
+                        <span>14 de Enero - 11 de Febrero, 2024</span>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- AFC -->
+                    <div>
+                        <h3 class="text-xl font-semibold mb-4 text-nfl-blue">AFC Playoff Picture</h3>
+                        <div class="space-y-4">
+                            <template x-for="team in afcPlayoffTeams" :key="team.id">
+                                <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-neutral-800 rounded-lg">
+                                    <div class="flex items-center">
+                                        <div class="team-logo-small mr-3" :style="'background: ' + team.color" x-text="team.abbr"></div>
+                                        <div>
+                                            <div class="font-semibold" x-text="team.name"></div>
+                                            <div class="text-sm text-gray-500 dark:text-gray-400" x-text="team.record"></div>
+                                        </div>
+                                    </div>
+                                    <span class="text-sm font-semibold" x-text="'#' + team.seed"></span>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                    
+                    <!-- NFC -->
+                    <div>
+                        <h3 class="text-xl font-semibold mb-4 text-nfl-red">NFC Playoff Picture</h3>
+                        <div class="space-y-4">
+                            <template x-for="team in nfcPlayoffTeams" :key="team.id">
+                                <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-neutral-800 rounded-lg">
+                                    <div class="flex items-center">
+                                        <div class="team-logo-small mr-3" :style="'background: ' + team.color" x-text="team.abbr"></div>
+                                        <div>
+                                            <div class="font-semibold" x-text="team.name"></div>
+                                            <div class="text-sm text-gray-500 dark:text-gray-400" x-text="team.record"></div>
+                                        </div>
+                                    </div>
+                                    <span class="text-sm font-semibold" x-text="'#' + team.seed"></span>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-8">
+                    <h3 class="text-lg font-semibold mb-4 text-nfl-blue dark:text-nfl-red">Calendario de Playoffs</h3>
+                    <div class="bg-gray-50 dark:bg-neutral-800 rounded-lg p-4">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="font-semibold">Ronda Wild Card</span>
+                            <span class="text-sm text-gray-500 dark:text-gray-400">14-15 Enero, 2024</span>
+                        </div>
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="font-semibold">Ronda Divisional</span>
+                            <span class="text-sm text-gray-500 dark:text-gray-400">21-22 Enero, 2024</span>
+                        </div>
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="font-semibold">Finales de Conferencia</span>
+                            <span class="text-sm text-gray-500 dark:text-gray-400">28 Enero, 2024</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="font-semibold">Super Bowl LVIII</span>
+                            <span class="text-sm text-gray-500 dark:text-gray-400">11 Febrero, 2024</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Próximos partidos destacados -->
+        <section class="mb-16" x-show="activeTab === 'calendar'">
+            <h2 class="text-2xl font-bold mb-6 text-nfl-blue dark:text-nfl-red">Próximos Partidos Destacados</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <template x-for="game in featuredGames" :key="game.id">
+                    <div class="bg-white dark:bg-neutral-850 rounded-xl p-6 shadow-md border border-gray-100 dark:border-neutral-700">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <span class="text-sm text-gray-500 dark:text-gray-400" x-text="game.date"></span>
+                                <h3 class="text-xl font-bold mt-1" x-text="game.matchup"></h3>
+                            </div>
+                            <span class="text-xs font-semibold px-2 py-1 rounded bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">Destacado</span>
+                        </div>
+                        
+                        <div class="flex justify-between items-center mb-4">
+                            <div class="flex items-center">
+                                <div class="team-logo-small mr-3" :style="'background: ' + game.awayTeam.color" x-text="game.awayTeam.abbr"></div>
+                                <div class="font-semibold" x-text="game.awayTeam.name"></div>
+                            </div>
+                            <div class="text-sm" x-text="game.awayTeam.record"></div>
+                        </div>
+                        
+                        <div class="flex justify-between items-center mb-4">
+                            <div class="flex items-center">
+                                <div class="team-logo-small mr-3" :style="'background: ' + game.homeTeam.color" x-text="game.homeTeam.abbr"></div>
+                                <div class="font-semibold" x-text="game.homeTeam.name"></div>
+                            </div>
+                            <div class="text-sm" x-text="game.homeTeam.record"></div>
+                        </div>
+                        
+                        <div class="text-center pt-3 border-t border-gray-100 dark:border-neutral-700">
+                            <span class="text-sm text-gray-500 dark:text-gray-400" x-text="game.venue"></span>
+                            <div class="mt-2">
+                                <span class="text-sm font-semibold text-nfl-blue dark:text-nfl-red" x-text="game.time"></span>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-100 dark:bg-neutral-850 border-t border-gray-200 dark:border-neutral-700 py-12 mt-16">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center">
+                        <i class="fas fa-football mr-2 text-nfl-blue dark:text-nfl-red"></i>NFL Blog
+                    </h3>
+                    <p class="text-gray-600 dark:text-gray-300 text-sm">
+                        Tu fuente confiable de noticias, análisis y estadísticas de la National Football League.
+                    </p>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Secciones</h4>
+                    <ul class="space-y-2">
+                        <li><a href="index.html#inicio" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Inicio</a></li>
+                        <li><a href="equipos-nfl.html" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Equipos</a></li>
+                        <li><a href="jugadores-destacados.html" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Jugadores</a></li>
+                        <li><a href="index.html#articulos" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Artículos</a></li>
+                        <li><a href="calendario-resultados.html" class="text-nfl-blue dark:text-nfl-red text-sm">Calendario</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Equipos</h4>
+                    <ul class="space-y-2">
+                        <li><a href="equipos-nfl.html" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">AFC Oeste</a></li>
+                        <li><a href="equipos-nfl.html" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">NFC Este</a></li>
+                        <li><a href="equipos-nfl.html" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">AFC Norte</a></li>
+                        <li><a href="equipos-nfl.html" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">NFC Oeste</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Síguenos</h4>
+                    <div class="flex space-x-4 mb-6">
+                        <a href="#" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-nfl-red">
+                            <i class="fab fa-twitter text-lg"></i>
+                        </a>
+                        <a href="#" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-nfl-red">
+                            <i class="fab fa-facebook text-lg"></i>
+                        </a>
+                        <a href="#" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-nfl-red">
+                            <i class="fab fa-instagram text-lg"></i>
+                        </a>
+                        <a href="#" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-nfl-red">
+                            <i class="fab fa-youtube text-lg"></i>
+                        </a>
+                    </div>
+                    
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">Newsletter</h4>
+                    <div class="flex">
+                        <input type="email" placeholder="Tu email" class="px-3 py-2 border border-gray-300 dark:border-neutral-700 rounded-l text-sm w-full dark:bg-neutral-800">
+                        <button class="bg-nfl-blue text-white px-3 py-2 rounded-r text-sm">Suscribir</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-8 text-center text-gray-500 dark:text-gray-400 text-sm">
+                <p>© 2023 NFL Blog. Este sitio no está afiliado oficialmente con la NFL. Todas las marcas registradas son propiedad de sus respectivos dueños.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Función para gestionar el calendario y resultados de la NFL
+        function nflSchedule() {
+            return {
+                isDark: false,
+                activeTab: 'calendar',
+                selectedWeek: 1,
+                selectedConference: 'AFC',
+                weeks: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
+                games: [
+                    { id: 1, week: 1, date: '10 Sep 2023', time: '20:20', status: 'final', venue: 'Arrowhead Stadium', awayTeam: { name: 'Lions', abbr: 'DET', color: '#0076B6', record: '1-0' }, homeTeam: { name: 'Chiefs', abbr: 'KC', color: '#E31837', record: '0-1' }, awayScore: 21, homeScore: 20 },
+                    { id: 2, week: 1, date: '10 Sep 2023', time: '13:00', status: 'final', venue: 'MetLife Stadium', awayTeam: { name: 'Cowboys', abbr: 'DAL', color: '#041E42', record: '1-0' }, homeTeam: { name: 'Giants', abbr: 'NYG', color: '#0B2265', record: '0-1' }, awayScore: 40, homeScore: 0 },
+                    { id: 3, week: 1, date: '10 Sep 2023', time: '16:25', status: 'final', venue: 'SoFi Stadium', awayTeam: { name: 'Dolphins', abbr: 'MIA', color: '#008E97', record: '1-0' }, homeTeam: { name: 'Chargers', abbr: 'LAC', color: '#0080C6', record: '0-1' }, awayScore: 36, homeScore: 34 },
+                    { id: 4, week: 1, date: '11 Sep 2023', time: '20:15', status: 'final', venue: 'MetLife Stadium', awayTeam: { name: 'Bills', abbr: 'BUF', color: '#00338D', record: '0-1' }, homeTeam: { name: 'Jets', abbr: 'NYJ', color: '#125740', record: '1-0' }, awayScore: 16, homeScore: 22 },
+                    { id: 5, week: 2, date: '17 Sep 2023', time: '13:00', status: 'final', venue: 'Mercedes-Benz Stadium', awayTeam: { name: 'Packers', abbr: 'GB', color: '#203731', record: '1-1' }, homeTeam: { name: 'Falcons', abbr: 'ATL', color: '#A71930', record: '2-0' }, awayScore: 24, homeScore: 25 },
+                    { id: 6, week: 2, date: '17 Sep 2023', time: '13:00', status: 'final', venue: 'Raymond James Stadium', awayTeam: { name: 'Bears', abbr: 'CHI', color: '#0B162A', record: '0-2' }, homeTeam: { name: 'Buccaneers', abbr: 'TB', color: '#D50A0A', record: '2-0' }, awayScore: 17, homeScore: 27 },
+                    { id: 7, week: 2, date: '17 Sep 2023', time: '16:25', status: 'final', venue: 'SoFi Stadium', awayTeam: { name: '49ers', abbr: 'SF', color: '#AA0000', record: '2-0' }, homeTeam: { name: 'Rams', abbr: 'LAR', color: '#003594', record: '1-1' }, awayScore: 30, homeScore: 23 },
+                    { id: 8, week: 2, date: '18 Sep 2023', time: '20:15', status: 'final', venue: 'Lincoln Financial Field', awayTeam: { name: 'Vikings', abbr: 'MIN', color: '#4F2683', record: '0-2' }, homeTeam: { name: 'Eagles', abbr: 'PHI', color: '#004C54', record: '2-0' }, awayScore: 28, homeScore: 34 },
+                    { id: 9, week: 3, date: '24 Sep 2023', time: '13:00', status: 'scheduled', venue: 'Gillette Stadium', awayTeam: { name: 'Saints', abbr: 'NO', color: '#D3BC8D', record: '2-0' }, homeTeam: { name: 'Patriots', abbr: 'NE', color: '#002244', record: '0-2' }, awayScore: null, homeScore: null },
+                    { id: 10, week: 3, date: '24 Sep 2023', time: '13:00', status: 'scheduled', venue: 'Commanders Field', awayTeam: { name: 'Bills', abbr: 'BUF', color: '#00338D', record: '1-1' }, homeTeam: { name: 'Commanders', abbr: 'WSH', color: '#5A1414', record: '2-0' }, awayScore: null, homeScore: null },
+                    { id: 11, week: 3, date: '24 Sep 2023', time: '16:05', status: 'scheduled', venue: 'Lumen Field', awayTeam: { name: 'Panthers', abbr: 'CAR', color: '#0085CA', record: '0-2' }, homeTeam: { name: 'Seahawks', abbr: 'SEA', color: '#002244', record: '1-1' }, awayScore: null, homeScore: null },
+                    { id: 12, week: 3, date: '24 Sep 2023', time: '20:20', status: 'scheduled', venue: 'Hard Rock Stadium', awayTeam: { name: 'Broncos', abbr: 'DEN', color: '#FB4F14', record: '0-2' }, homeTeam: { name: 'Dolphins', abbr: 'MIA', color: '#008E97', record: '2-0' }, awayScore: null, homeScore: null },
+                    { id: 13, week: 4, date: '1 Oct 2023', time: '13:00', status: 'scheduled', venue: 'Soldier Field', awayTeam: { name: 'Broncos', abbr: 'DEN', color: '#FB4F14', record: '0-2' }, homeTeam: { name: 'Bears', abbr: 'CHI', color: '#0B162A', record: '0-2' }, awayScore: null, homeScore: null },
+                    { id: 14, week: 4, date: '1 Oct 2023', time: '13:00', status: 'scheduled', venue: 'U.S. Bank Stadium', awayTeam: { name: 'Panthers', abbr: 'CAR', color: '#0085CA', record: '0-2' }, homeTeam: { name: 'Vikings', abbr: 'MIN', color: '#4F2683', record: '0-2' }, awayScore: null, homeScore: null },
+                    { id: 15, week: 4, date: '1 Oct 2023', time: '16:05', status: 'scheduled', venue: 'Levi\'s Stadium', awayTeam: { name: 'Cardinals', abbr: 'ARI', color: '#97233F', record: '0-2' }, homeTeam: { name: '49ers', abbr: 'SF', color: '#AA0000', record: '2-0' }, awayScore: null, homeScore: null },
+                    { id: 16, week: 4, date: '2 Oct 2023', time: '20:15', status: 'scheduled', venue: 'MetLife Stadium', awayTeam: { name: 'Seahawks', abbr: 'SEA', color: '#002244', record: '1-1' }, homeTeam: { name: 'Giants', abbr: 'NYG', color: '#0B2265', record: '1-1' }, awayScore: null, homeScore: null }
+                ],
+                teams: [
+                    // AFC Este
+                    { id: 1, name: 'Bills', conference: 'AFC', division: 'AFC Este', wins: 3, losses: 1, ties: 0, playoff: true, seed: 1, color: '#00338D', abbr: 'BUF' },
+                    { id: 2, name: 'Dolphins', conference: 'AFC', division: 'AFC Este', wins: 3, losses: 1, ties: 0, playoff: true, seed: 5, color: '#008E97', abbr: 'MIA' },
+                    { id: 3, name: 'Jets', conference: 'AFC', division: 'AFC Este', wins: 1, losses: 3, ties: 0, playoff: false, color: '#125740', abbr: 'NYJ' },
+                    { id: 4, name: 'Patriots', conference: 'AFC', division: 'AFC Este', wins: 1, losses: 3, ties: 0, playoff: false, color: '#002244', abbr: 'NE' },
+                    
+                    // AFC Norte
+                    { id: 5, name: 'Ravens', conference: 'AFC', division: 'AFC Norte', wins: 3, losses: 1, ties: 0, playoff: true, seed: 2, color: '#241773', abbr: 'BAL' },
+                    { id: 6, name: 'Browns', conference: 'AFC', division: 'AFC Norte', wins: 2, losses: 2, ties: 0, playoff: true, seed: 6, color: '#311D00', abbr: 'CLE' },
+                    { id: 7, name: 'Steelers', conference: 'AFC', division: 'AFC Norte', wins: 2, losses: 2, ties: 0, playoff: false, color: '#FFB612', abbr: 'PIT' },
+                    { id: 8, name: 'Bengals', conference: 'AFC', division: 'AFC Norte', wins: 1, losses: 3, ties: 0, playoff: false, color: '#FB4F14', abbr: 'CIN' },
+                    
+                    // AFC Sur
+                    { id: 9, name: 'Texans', conference: 'AFC', division: 'AFC Sur', wins: 2, losses: 2, ties: 0, playoff: true, seed: 4, color: '#03202F', abbr: 'HOU' },
+                    { id: 10, name: 'Colts', conference: 'AFC', division: 'AFC Sur', wins: 2, losses: 2, ties: 0, playoff: false, color: '#002C5F', abbr: 'IND' },
+                    { id: 11, name: 'Jaguars', conference: 'AFC', division: 'AFC Sur', wins: 2, losses: 2, ties: 0, playoff: false, color: '#006778', abbr: 'JAX' },
+                    { id: 12, name: 'Titans', conference: 'AFC', division: 'AFC Sur', wins: 2, losses: 2, ties: 0, playoff: false, color: '#0C2340', abbr: 'TEN' },
+                    
+                    // AFC Oeste
+                    { id: 13, name: 'Chiefs', conference: 'AFC', division: 'AFC Oeste', wins: 3, losses: 1, ties: 0, playoff: true, seed: 3, color: '#E31837', abbr: 'KC' },
+                    { id: 14, name: 'Broncos', conference: 'AFC', division: 'AFC Oeste', wins: 1, losses: 3, ties: 0, playoff: false, color: '#FB4F14', abbr: 'DEN' },
+                    { id: 15, name: 'Raiders', conference: 'AFC', division: 'AFC Oeste', wins: 1, losses: 3, ties: 0, playoff: false, color: '#000000', abbr: 'LV' },
+                    { id: 16, name: 'Chargers', conference: 'AFC', division: 'AFC Oeste', wins: 2, losses: 2, ties: 0, playoff: false, color: '#0080C6', abbr: 'LAC' },
+                    
+                    // NFC Este
+                    { id: 17, name: 'Eagles', conference: 'NFC', division: 'NFC Este', wins: 4, losses: 0, ties: 0, playoff: true, seed: 1, color: '#004C54', abbr: 'PHI' },
+                    { id: 18, name: 'Cowboys', conference: 'NFC', division: 'NFC Este', wins: 3, losses: 1, ties: 0, playoff: true, seed: 5, color: '#041E42', abbr: 'DAL' },
+                    { id: 19, name: 'Commanders', conference: 'NFC', division: 'NFC Este', wins: 2, losses: 2, ties: 0, playoff: false, color: '#5A1414', abbr: 'WSH' },
+                    { id: 20, name: 'Giants', conference: 'NFC', division: 'NFC Este', wins: 1, losses: 3, ties: 0, playoff: false, color: '#0B2265', abbr: 'NYG' },
+                    
+                    // NFC Norte
+                    { id: 21, name: 'Lions', conference: 'NFC', division: 'NFC Norte', wins: 3, losses: 1, ties: 0, playoff: true, seed: 2, color: '#0076B6', abbr: 'DET' },
+                    { id: 22, name: 'Packers', conference: 'NFC', division: 'NFC Norte', wins: 2, losses: 2, ties: 0, playoff: true, seed: 6, color: '#203731', abbr: 'GB' },
+                    { id: 23, name: 'Vikings', conference: 'NFC', division: 'NFC Norte', wins: 1, losses: 3, ties: 0, playoff: false, color: '#4F2683', abbr: 'MIN' },
+                    { id: 24, name: 'Bears', conference: 'NFC', division: 'NFC Norte', wins: 0, losses: 4, ties: 0, playoff: false, color: '#0B162A', abbr: 'CHI' },
+                    
+                    // NFC Sur
+                    { id: 25, name: 'Buccaneers', conference: 'NFC', division: 'NFC Sur', wins: 3, losses: 1, ties: 0, playoff: true, seed: 3, color: '#D50A0A', abbr: 'TB' },
+                    { id: 26, name: 'Falcons', conference: 'NFC', division: 'NFC Sur', wins: 2, losses: 2, ties: 0, playoff: true, seed: 4, color: '#A71930', abbr: 'ATL' },
+                    { id: 27, name: 'Saints', conference: 'NFC', division: 'NFC Sur', wins: 2, losses: 2, ties: 0, playoff: false, color: '#D3BC8D', abbr: 'NO' },
+                    { id: 28, name: 'Panthers', conference: 'NFC', division: 'NFC Sur', wins: 0, losses: 4, ties: 0, playoff: false, color: '#0085CA', abbr: 'CAR' },
+                    
+                    // NFC Oeste
+                    { id: 29, name: '49ers', conference: 'NFC', division: 'NFC Oeste', wins: 4, losses: 0, ties: 0, playoff: true, seed: 1, color: '#AA0000', abbr: 'SF' },
+                    { id: 30, name: 'Seahawks', conference: 'NFC', division: 'NFC Oeste', wins: 3, losses: 1, ties: 0, playoff: true, seed: 5, color: '#002244', abbr: 'SEA' },
+                    { id: 31, name: 'Rams', conference: 'NFC', division: 'NFC Oeste', wins: 2, losses: 2, ties: 0, playoff: false, color: '#003594', abbr: 'LAR' },
+                    { id: 32, name: 'Cardinals', conference: 'NFC', division: 'NFC Oeste', wins: 1, losses: 3, ties: 0, playoff: false, color: '#97233F', abbr: 'ARI' }
+                ],
+                featuredGames: [
+                    { id: 1, date: '8 Oct 2023', time: '20:20', matchup: 'Cowboys vs 49ers', venue: 'Levi\'s Stadium', awayTeam: { name: 'Cowboys', abbr: 'DAL', color: '#041E42', record: '3-1' }, homeTeam: { name: '49ers', abbr: 'SF', color: '#AA0000', record: '4-0' } },
+                    { id: 2, date: '15 Oct 2023', time: '16:25', matchup: 'Eagles vs Jets', venue: 'MetLife Stadium', awayTeam: { name: 'Eagles', abbr: 'PHI', color: '#004C54', record: '4-0' }, homeTeam: { name: 'Jets', abbr: 'NYJ', color: '#125740', record: '1-3' } },
+                    { id: 3, date: '22 Oct 2023', time: '20:20', matchup: 'Dolphins vs Eagles', venue: 'Lincoln Financial Field', awayTeam: { name: 'Dolphins', abbr: 'MIA', color: '#008E97', record: '3-1' }, homeTeam: { name: 'Eagles', abbr: 'PHI', color: '#004C54', record: '5-0' } },
+                    { id: 4, date: '5 Nov 2023', time: '16:25', matchup: 'Bills vs Bengals', venue: 'Paycor Stadium', awayTeam: { name: 'Bills', abbr: 'BUF', color: '#00338D', record: '3-1' }, homeTeam: { name: 'Bengals', abbr: 'CIN', color: '#FB4F14', record: '1-3' } }
+                ],
+                init() {
+                    // Obtener el tema guardado o detectar la preferencia del sistema
+                    const savedTheme = localStorage.getItem('theme');
+                    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    
+                    this.isDark = savedTheme ? savedTheme === 'dark' : systemPrefersDark;
+                    
+                    // Aplicar el tema al inicializar
+                    this.applyTheme();
+                },
+                toggleTheme() {
+                    this.isDark = !this.isDark;
+                    this.applyTheme();
+                    localStorage.setItem('theme', this.isDark ? 'dark' : 'light');
+                },
+                applyTheme() {
+                    if (this.isDark) {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
+                },
+                getGamesByWeek(week) {
+                    return this.games.filter(game => game.week === week);
+                },
+                getDivisionsByConference(conference) {
+                    const divisions = new Set();
+                    this.teams.forEach(team => {
+                        if (team.conference === conference) {
+                            divisions.add(team.division);
+                        }
+                    });
+                    return Array.from(divisions);
+                },
+                getTeamsByDivision(conference, division) {
+                    return this.teams
+                        .filter(team => team.conference === conference && team.division === division)
+                        .sort((a, b) => {
+                            // Ordenar por porcentaje de victorias
+                            const aWinPct = a.wins / (a.wins + a.losses + a.ties);
+                            const bWinPct = b.wins / (b.wins + b.losses + b.ties);
+                            return bWinPct - aWinPct;
+                        });
+                },
+                get afcPlayoffTeams() {
+                    return this.teams
+                        .filter(team => team.conference === 'AFC' && team.playoff)
+                        .sort((a, b) => a.seed - b.seed);
+                },
+                get nfcPlayoffTeams() {
+                    return this.teams
+                        .filter(team => team.conference === 'NFC' && team.playoff)
+                        .sort((a, b) => a.seed - b.seed);
+                }
+            }
+        }
+
+        // Barra de progreso de lectura
+        window.addEventListener('scroll', function() {
+            const winHeight = window.innerHeight;
+            const docHeight = document.documentElement.scrollHeight;
+            const scrollTop = window.pageYOffset;
+            const trackLength = docHeight - winHeight;
+            const progress = Math.floor((scrollTop / trackLength) * 100);
+            document.getElementById('reading-progress').style.width = progress + '%';
+        });
+
+        // Inicializar el tema al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ya está manejado por Alpine.js, pero por si acaso
+            const savedTheme = localStorage.getItem('theme');
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const isDark = savedTheme ? savedTheme === 'dark' : systemPrefersDark;
+            
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+    </script>
+</body>
+</html>

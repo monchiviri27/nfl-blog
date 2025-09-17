@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Los salarios más altos de la NFL en 2023 | NFL Blog</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        nfl: {
+                            blue: '#013369',
+                            red: '#D50A0A',
+                            silver: '#A5ACAF'
+                        },
+                        neutral: {
+                            850: '#1e1e1e',
+                            950: '#0f0f0f'
+                        }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .article-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .article-card:hover {
+            transform: translateY(-5px);
+        }
+        .team-logo {
+            transition: transform 0.3s ease;
+        }
+        .team-logo:hover {
+            transform: scale(1.1);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #013369 0%, #D50A0A 100%);
+        }
+        .prose {
+            max-width: none;
+        }
+        .prose h2 {
+            font-weight: 700;
+            font-size: 1.5em;
+            margin-top: 2em;
+            margin-bottom: 1em;
+            color: #013369;
+        }
+        .dark .prose h2 {
+            color: #D50A0A;
+        }
+        .prose p {
+            margin-bottom: 1.25em;
+            line-height: 1.7;
+        }
+        .prose blockquote {
+            border-left: 4px solid #D50A0A;
+            padding-left: 1.5em;
+            margin: 2em 0;
+            font-style: italic;
+        }
+        .dark .prose blockquote {
+            border-left-color: #013369;
+        }
+        .theme-transition * {
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+        .reading-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 4px;
+            background: linear-gradient(90deg, #013369, #D50A0A);
+            z-index: 9999;
+        }
+        .salary-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 2em 0;
+        }
+        .salary-table th, .salary-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .dark .salary-table th, .dark .salary-table td {
+            border-bottom: 1px solid #374151;
+        }
+        .salary-table th {
+            background-color: #f9fafb;
+            font-weight: 700;
+            color: #013369;
+        }
+        .dark .salary-table th {
+            background-color: #1f2937;
+            color: #D50A0A;
+        }
+        .salary-table tr:hover {
+            background-color: #f3f4f6;
+        }
+        .dark .salary-table tr:hover {
+            background-color: #374151;
+        }
+        .highlight {
+            background: linear-gradient(120deg, rgba(213, 10, 10, 0.1) 0%, rgba(1, 51, 105, 0.1) 100%);
+            border-left: 4px solid #D50A0A;
+            padding: 1.5em;
+            margin: 2em 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .dark .highlight {
+            background: linear-gradient(120deg, rgba(213, 10, 10, 0.15) 0%, rgba(1, 51, 105, 0.15) 100%);
+            border-left: 4px solid #013369;
+        }
+    </style>
+</head>
+<body x-data="themeHandler()" x-bind:class="{'dark': isDark}" class="theme-transition bg-white dark:bg-neutral-950 text-gray-800 dark:text-gray-200 min-h-screen">
+    <!-- Barra de progreso de lectura -->
+    <div class="reading-progress" id="reading-progress"></div>
+
+    <!-- Navegación fija -->
+    <nav class="fixed w-full bg-white/90 dark:bg-neutral-850/90 backdrop-blur-sm py-4 z-50 border-b border-gray-200 dark:border-neutral-700 shadow-sm">
+        <div class="container mx-auto px-4 flex justify-between items-center">
+            <a href="index.html" class="text-2xl font-bold text-nfl-blue dark:text-white flex items-center">
+                <i class="fas fa-football mr-2"></i>NFL Blog
+            </a>
+            
+            <div class="flex items-center space-x-6">
+                <a href="index.html#inicio" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Inicio</a>
+                <a href="index.html#equipos" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Equipos</a>
+                <a href="index.html#articulos" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Artículos</a>
+                <a href="index.html#estadisticas" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Estadísticas</a>
+                
+                <!-- Selector de tema -->
+                <div class="flex items-center space-x-2">
+                    <span x-show="!isDark"><i class="fas fa-sun text-yellow-500"></i></span>
+                    <span x-show="isDark"><i class="fas fa-moon text-blue-300"></i></span>
+                    
+                    <button 
+                        @click="toggleTheme()"
+                        :aria-label="isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+                        class="w-12 h-6 bg-gray-300 dark:bg-nfl-blue rounded-full p-1 relative focus:outline-none focus:ring-2 focus:ring-nfl-blue"
+                    >
+                        <span class="w-4 h-4 bg-white dark:bg-gray-200 rounded-full shadow-md block transform transition-transform duration-300" :class="{'translate-x-6': isDark}"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Espacio para la navegación fija -->
+    <div class="h-20"></div>
+
+    <!-- Contenido principal -->
+    <main class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Encabezado del artículo -->
+        <article class="prose dark:prose-invert prose-lg max-w-none">
+            <div class="mb-8">
+                <a href="index.html" class="inline-flex items-center text-nfl-blue dark:text-nfl-red hover:underline font-medium mb-4">
+                    <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clip-rule="evenodd"></path>
+                    </svg>
+                    Volver al inicio
+                </a>
+                
+                <span class="text-sm font-semibold bg-nfl-red text-white px-3 py-1 rounded-full">Finanzas</span>
+                <span class="text-sm text-gray-500 dark:text-gray-400 ml-3">5 Septiembre 2023</span>
+                
+                <h1 class="text-3xl md:text-4xl font-bold mt-4 mb-6 text-nfl-blue dark:text-nfl-red">Los salarios más altos de la NFL en 2023</h1>
+                
+                <p class="text-xl text-gray-600 dark:text-gray-300 mb-6">
+                    Descubre qué jugadores lideran la lista de ingresos y cómo estos megacontratos afectan a los límites salariales de los equipos.
+                </p>
+                
+                <div class="flex items-center mt-8">
+                    <div class="w-12 h-12 rounded-full bg-nfl-blue text-white flex items-center justify-center font-bold text-lg">ER</div>
+                    <div class="ml-4">
+                        <p class="font-semibold m-0">Equipo de Redacción</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 m-0">NFL Blog</p>
+                    </div>
+                </div>
+            </div>
+            
+            <img src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80" 
+                 alt="Estadio de la NFL" class="w-full h-64 md:h-96 object-cover rounded-xl shadow-md mb-10">
+            
+            <!-- Contenido del artículo -->
+            <p>La NFL sigue batiendo récords financieros, y los salarios de los jugadores no son la excepción. La temporada 2023 ha visto cifras que hubieran sido impensables hace apenas una década, con contratos que redefinen el valor de las posiciones clave en la liga.</p>
+            
+            <h2>Los quarterbacks siguen reinando</h2>
+            
+            <p>Como era de esperar, los mariscales de campo continúan liderando la clasificación salarial. <strong>Patrick Mahomes</strong> consolida su posición con un contrato que supera los $450 millones a 10 años, aunque en términos de promedio anual por temporada, <strong>Lamar Jackson</strong> se lleva la corona con $52 millones anuales tras su extensión con los Ravens.</p>
+            
+            <p>Pero la sorpresa del año llega de Cincinnati, donde <strong>Joe Burrow</strong> firmó una extensión de 5 años por $275 millones, convirtiéndose en el jugador mejor pagado de la NFL por promedio anual ($55 millones).</p>
+            
+            <div class="highlight">
+                <p class="m-0 font-semibold">"Los salarios de los quarterbacks de élite han superado todas las expectativas. Estamos viendo cómo se redefine el valor de la posición más importante del fútbol americano."</p>
+                <p class="m-0 mt-2 text-sm">- Analista financiero de la NFL</p>
+            </div>
+            
+            <h2>Top 10 jugadores mejor pagados en 2023</h2>
+            
+            <div class="overflow-x-auto">
+                <table class="salary-table">
+                    <thead>
+                        <tr>
+                            <th>Jugador</th>
+                            <th>Equipo</th>
+                            <th>Posición</th>
+                            <th>Salario Anual</th>
+                            <th>Contrato Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="font-semibold">Patrick Mahomes</td>
+                            <td>Chiefs</td>
+                            <td>QB</td>
+                            <td>$52.65M</td>
+                            <td>$450M/10 años</td>
+                        </tr>
+                        <tr>
+                            <td class="font-semibold">Lamar Jackson</td>
+                            <td>Ravens</td>
+                            <td>QB</td>
+                            <td>$52M</td>
+                            <td>$260M/5 años</td>
+                        </tr>
+                        <tr>
+                            <td class="font-semibold">Jalen Hurts</td>
+                            <td>Eagles</td>
+                            <td>QB</td>
+                            <td>$51M</td>
+                            <td>$255M/5 años</td>
+                        </tr>
+                        <tr>
+                            <td class="font-semibold">Aaron Rodgers</td>
+                            <td>Jets</td>
+                            <td>QB</td>
+                            <td>$50.3M</td>
+                            <td>$150M/3 años</td>
+                        </tr>
+                        <tr>
+                            <td class="font-semibold">Russell Wilson</td>
+                            <td>Broncos</td>
+                            <td>QB</td>
+                            <td>$49M</td>
+                            <td>$245M/5 años</td>
+                        </tr>
+                        <tr>
+                            <td class="font-semibold">Kyler Murray</td>
+                            <td>Cardinals</td>
+                            <td>QB</td>
+                            <td>$46.1M</td>
+                            <td>$230.5M/5 años</td>
+                        </tr>
+                        <tr>
+                            <td class="font-semibold">Deshaun Watson</td>
+                            <td>Browns</td>
+                            <td>QB</td>
+                            <td>$46M</td>
+                            <td>$230M/5 años</td>
+                        </tr>
+                        <tr>
+                            <td class="font-semibold">Josh Allen</td>
+                            <td>Bills</td>
+                            <td>QB</td>
+                            <td>$43M</td>
+                            <td>$258M/6 años</td>
+                        </tr>
+                        <tr>
+                            <td class="font-semibold">Davante Adams</td>
+                            <td>Raiders</td>
+                            <td>WR</td>
+                            <td>$37.5M</td>
+                            <td>$141.25M/5 años</td>
+                        </tr>
+                        <tr>
+                            <td class="font-semibold">Tyreek Hill</td>
+                            <td>Dolphins</td>
+                            <td>WR</td>
+                            <td>$30M</td>
+                            <td>$120M/4 años</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <h2>La explosión salarial de los receptores</h2>
+            
+            <p>La posición de wide receiver ha experimentado una reevaluación drástica. <strong>Tyreek Hill</strong> (Dolphins) y <strong>Davante Adams</strong> (Raiders) han establecido nuevos estándares para la posición, con contratos que superan los $140 millones y $120 millones respectivamente.</p>
+            
+            <p>Este aumento refleja la evolución de los esquemas ofensivos en la NFL, donde el pase se ha convertido en el arma principal de la mayoría de los equipos, aumentando el valor de los receptores elite.</p>
+            
+            <h2>El impacto en el salary cap</h2>
+            
+            <p>Estos megacontratos presentan desafíos significativos para la gestión de los equipos. El salary cap de la NFL para 2023 se estableció en $224.8 millones, lo que significa que algunos equipos destinan más del 20% de su tope salarial a un solo jugador.</p>
+            
+            <p>Esta tendencia ha llevado a los equipos a ser más creativos con la estructuración de contratos, utilizando bonos por firma, opciones y conversiones de salario para distribuir los impactos contables a lo largo de varios años.</p>
+            
+            <h2>¿Vale la pena la inversión?</h2>
+            
+            <p>La pregunta del millón: ¿estos jugadores justifican sus salarios récord? Los análisis demuestran que, aunque los quarterbacks de élite suelen proporcionar retornos significativos, existen casos donde contratos masivos han limitado la capacidad de los equipos para construir plantillas competitivas completas.</p>
+            
+            <p>El equilibrio entre pagar a las estrellas y mantener profundidad en el roster es el mayor desafío que enfrentan los gerentes generales en la era de los megacontratos.</p>
+            
+            <h2>Mirando hacia el futuro</h2>
+            
+            <p>Con los ingresos de la NFL en constante crecimiento y nuevos acuerdos de medios televisivos en el horizonte, se espera que el salary cap continúe aumentando, lo que probablemente llevará a aún mayores contratos en los próximos años.</p>
+            
+            <p>La pregunta ya no es si los jugadores romperán la barrera de los $60 millones anuales, sino cuándo y quién será el primero en hacerlo.</p>
+            
+            <div class="bg-gray-100 dark:bg-neutral-850 rounded-xl p-6 mt-10 border border-gray-200 dark:border-neutral-700">
+                <h3 class="text-xl font-bold mb-4 text-nfl-blue dark:text-nfl-red">¿Qué opinas?</h3>
+                <p class="mb-4">¿Estás de acuerdo con estos salarios estratosféricos? ¿Crees que los quarterbacks deberían ganar tanto más que jugadores de otras posiciones? Déjanos tus comentarios.</p>
+                
+                <div class="flex space-x-4">
+                    <a href="#" class="flex items-center text-nfl-blue dark:text-nfl-red hover:underline">
+                        <i class="fab fa-twitter mr-2"></i> Comentar en Twitter
+                    </a>
+                    <a href="#" class="flex items-center text-nfl-blue dark:text-nfl-red hover:underline">
+                        <i class="fab fa-facebook mr-2"></i> Comentar en Facebook
+                    </a>
+                </div>
+            </div>
+            
+            <div class="mt-12 pt-8 border-t border-gray-200 dark:border-neutral-700">
+                <h3 class="text-xl font-bold mb-6">Artículos relacionados</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <a href="mahomes-mejor-qb-decada.html" class="group">
+                        <div class="bg-white dark:bg-neutral-850 rounded-lg p-4 shadow-md hover:shadow-lg transition border border-gray-100 dark:border-neutral-700">
+                            <span class="text-xs font-semibold bg-nfl-blue text-white px-2 py-1 rounded">Quarterbacks</span>
+                            <h4 class="font-bold mt-2 group-hover:text-nfl-blue dark:group-hover:text-nfl-red">Patrick Mahomes: ¿El mejor QB de la década?</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">Analizamos el impacto de Mahomes en la liga y su legado...</p>
+                        </div>
+                    </a>
+                    
+                    <a href="#" class="group">
+                        <div class="bg-white dark:bg-neutral-850 rounded-lg p-4 shadow-md hover:shadow-lg transition border border-gray-100 dark:border-neutral-700">
+                            <span class="text-xs font-semibold bg-gray-600 text-white px-2 py-1 rounded">Historia</span>
+                            <h4 class="font-bold mt-2 group-hover:text-nfl-blue dark:group-hover:text-nfl-red">Evolución de los salarios en la NFL: De 1960 a 2023</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">Cómo han cambiado las compensaciones en la liga a lo largo de las décadas...</p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </article>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-100 dark:bg-neutral-850 border-t border-gray-200 dark:border-neutral-700 py-12 mt-16">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center">
+                        <i class="fas fa-football mr-2 text-nfl-blue dark:text-nfl-red"></i>NFL Blog
+                    </h3>
+                    <p class="text-gray-600 dark:text-gray-300 text-sm">
+                        Tu fuente confiable de noticias, análisis y estadísticas de la National Football League.
+                    </p>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Secciones</h4>
+                    <ul class="space-y-2">
+                        <li><a href="index.html#inicio" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Inicio</a></li>
+                        <li><a href="index.html#equipos" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Equipos</a></li>
+                        <li><a href="index.html#articulos" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Artículos</a></li>
+                        <li><a href="index.html#estadisticas" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Estadísticas</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Equipos</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">AFC Oeste</a></li>
+                        <li><a href="#" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">NFC Este</a></li>
+                        <li><a href="#" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">AFC Norte</a></li>
+                        <li><a href="#" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">NFC Oeste</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Síguenos</h4>
+                    <div class="flex space-x-4 mb-6">
+                        <a href="#" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-nfl-red">
+                            <i class="fab fa-twitter text-lg"></i>
+                        </a>
+                        <a href="#" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-nfl-red">
+                            <i class="fab fa-facebook text-lg"></i>
+                        </a>
+                        <a href="#" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-nfl-red">
+                            <i class="fab fa-instagram text-lg"></i>
+                        </a>
+                        <a href="#" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-nfl-red">
+                            <i class="fab fa-youtube text-lg"></i>
+                        </a>
+                    </div>
+                    
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">Newsletter</h4>
+                    <div class="flex">
+                        <input type="email" placeholder="Tu email" class="px-3 py-2 border border-gray-300 dark:border-neutral-700 rounded-l text-sm w-full dark:bg-neutral-800">
+                        <button class="bg-nfl-blue text-white px-3 py-2 rounded-r text-sm">Suscribir</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-8 text-center text-gray-500 dark:text-gray-400 text-sm">
+                <p>© 2023 NFL Blog. Este sitio no está afiliado oficialmente con la NFL. Todas las marcas registradas son propiedad de sus respectivos dueños.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Función para gestionar el tema con Alpine.js
+        function themeHandler() {
+            return {
+                isDark: false,
+                init() {
+                    // Obtener el tema guardado o detectar la preferencia del sistema
+                    const savedTheme = localStorage.getItem('theme');
+                    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    
+                    this.isDark = savedTheme ? savedTheme === 'dark' : systemPrefersDark;
+                    
+                    // Aplicar el tema al inicializar
+                    this.applyTheme();
+                },
+                toggleTheme() {
+                    this.isDark = !this.isDark;
+                    this.applyTheme();
+                    localStorage.setItem('theme', this.isDark ? 'dark' : 'light');
+                },
+                applyTheme() {
+                    if (this.isDark) {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
+                }
+            }
+        }
+
+        // Barra de progreso de lectura
+        window.addEventListener('scroll', function() {
+            const winHeight = window.innerHeight;
+            const docHeight = document.documentElement.scrollHeight;
+            const scrollTop = window.pageYOffset;
+            const trackLength = docHeight - winHeight;
+            const progress = Math.floor((scrollTop / trackLength) * 100);
+            document.getElementById('reading-progress').style.width = progress + '%';
+        });
+
+        // Inicializar el tema al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ya está manejado por Alpine.js, pero por si acaso
+            const savedTheme = localStorage.getItem('theme');
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const isDark = savedTheme ? savedTheme === 'dark' : systemPrefersDark;
+            
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+    </script>
+</body>
+</html>

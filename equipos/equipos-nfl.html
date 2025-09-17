@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Equipos de la NFL | NFL Blog</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        nfl: {
+                            blue: '#013369',
+                            red: '#D50A0A',
+                            silver: '#A5ACAF'
+                        },
+                        neutral: {
+                            850: '#1e1e1e',
+                            950: '#0f0f0f'
+                        }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- favicon -->
+    <link rel="icon" href="../favicon.png" type="image/x-icon">
+    <link rel="shortcut icon" href="../favicon.png" type="image/x-icon">
+
+    <style>
+        .article-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .article-card:hover {
+            transform: translateY(-5px);
+        }
+        .team-logo {
+            transition: transform 0.3s ease;
+        }
+        .team-logo:hover {
+            transform: scale(1.1);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #013369 0%, #D50A0A 100%);
+        }
+        .prose {
+            max-width: none;
+        }
+        .prose h2 {
+            font-weight: 700;
+            font-size: 1.5em;
+            margin-top: 2em;
+            margin-bottom: 1em;
+            color: #013369;
+        }
+        .dark .prose h2 {
+            color: #D50A0A;
+        }
+        .prose p {
+            margin-bottom: 1.25em;
+            line-height: 1.7;
+        }
+        .prose blockquote {
+            border-left: 4px solid #D50A0A;
+            padding-left: 1.5em;
+            margin: 2em 0;
+            font-style: italic;
+        }
+        .dark .prose blockquote {
+            border-left-color: #013369;
+        }
+        .theme-transition * {
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+        .reading-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 4px;
+            background: linear-gradient(90deg, #013369, #D50A0A);
+            z-index: 9999;
+        }
+        .division-card {
+            transition: all 0.3s ease;
+        }
+        .division-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .dark .division-card:hover {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+        }
+        .team-modal {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        .team-modal-overlay {
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+        .conference-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 0.7rem;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+        }
+        .afc-badge {
+            background: #013369;
+            color: white;
+        }
+        .nfc-badge {
+            background: #D50A0A;
+            color: white;
+        }
+    </style>
+</head>
+<body x-data="nflTeams()" x-bind:class="{'dark': isDark}" class="theme-transition bg-white dark:bg-neutral-950 text-gray-800 dark:text-gray-200 min-h-screen">
+    <!-- Barra de progreso de lectura -->
+    <div class="reading-progress" id="reading-progress"></div>
+
+    <!-- Navegación fija -->
+    <nav class="fixed w-full bg-white/90 dark:bg-neutral-850/90 backdrop-blur-sm py-4 z-50 border-b border-gray-200 dark:border-neutral-700 shadow-sm">
+        <div class="container mx-auto px-4 flex justify-between items-center">
+            <a href="index.html" class="text-2xl font-bold text-nfl-blue dark:text-white flex items-center">
+                <i class="fas fa-football mr-2"></i>NFL Blog
+            </a>
+            
+            <div class="flex items-center space-x-6">
+                <a href="../index.html#inicio" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Inicio</a>
+                <a href="equipos-nfl.html" class="text-nfl-blue dark:text-nfl-red font-medium">Equipos</a>
+                <a href="../articulos/articulos.html#articulos" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Artículos</a>
+                <a href="../estadisticas.html#estadisticas" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Estadísticas</a>
+                <a href="../temporada/calendario-resultados.html#estadisticas" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Calendario</a>
+                
+                <!-- Selector de tema -->
+                <div class="flex items-center space-x-2">
+                    <span x-show="!isDark"><i class="fas fa-sun text-yellow-500"></i></span>
+                    <span x-show="isDark"><i class="fas fa-moon text-blue-300"></i></span>
+                    
+                    <button 
+                        @click="toggleTheme()"
+                        :aria-label="isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+                        class="w-12 h-6 bg-gray-300 dark:bg-nfl-blue rounded-full p-1 relative focus:outline-none focus:ring-2 focus:ring-nfl-blue"
+                    >
+                        <span class="w-4 h-4 bg-white dark:bg-gray-200 rounded-full shadow-md block transform transition-transform duration-300" :class="{'translate-x-6': isDark}"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Espacio para la navegación fija -->
+    <div class="h-20"></div>
+
+    <!-- Contenido principal -->
+    <main class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Encabezado de la página -->
+        <div class="mb-12 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold text-nfl-blue dark:text-nfl-red mb-4">Equipos de la NFL</h1>
+            <p class="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+                Conoce todos los equipos de la National Football League, sus divisiones, conferencias y datos históricos.
+            </p>
+        </div>
+
+        <!-- Selector de conferencia -->
+        <div class="mb-10 flex justify-center">
+            <div class="bg-gray-100 dark:bg-neutral-850 p-1 rounded-lg flex">
+                <button 
+                    @click="selectedConference = 'all'" 
+                    :class="{'bg-white dark:bg-neutral-800 shadow-sm': selectedConference === 'all'}"
+                    class="px-4 py-2 rounded-md text-sm font-medium transition"
+                >
+                    Todas
+                </button>
+                <button 
+                    @click="selectedConference = 'AFC'" 
+                    :class="{'bg-white dark:bg-neutral-800 shadow-sm': selectedConference === 'AFC'}"
+                    class="px-4 py-2 rounded-md text-sm font-medium transition"
+                >
+                    AFC
+                </button>
+                <button 
+                    @click="selectedConference = 'NFC'" 
+                    :class="{'bg-white dark:bg-neutral-800 shadow-sm': selectedConference === 'NFC'}"
+                    class="px-4 py-2 rounded-md text-sm font-medium transition"
+                >
+                    NFC
+                </button>
+            </div>
+        </div>
+
+        <!-- Sección de Conferencia AFC -->
+        <section x-show="selectedConference === 'all' || selectedConference === 'AFC'" class="mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-nfl-blue dark:text-nfl-red flex items-center">
+                <span class="w-3 h-3 bg-nfl-blue rounded-full mr-2"></span>
+                Conferencia AFC
+            </h2>
+            
+            <!-- División AFC Este -->
+            <div class="division-card bg-white dark:bg-neutral-850 rounded-xl shadow-md p-6 mb-8 border border-gray-100 dark:border-neutral-700">
+                <h3 class="text-2xl font-bold mb-6 text-nfl-blue dark:text-nfl-red">AFC Este</h3>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                    <template x-for="team in afcEast" :key="team.id">
+                        <div class="team-logo bg-gray-100 dark:bg-neutral-800 rounded-lg p-4 text-center cursor-pointer" @click="openModal(team)">
+                            <div class="w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center text-white font-bold text-xl" :style="`background: ${team.color}`" x-text="team.abbr"></div>
+                            <h4 class="font-semibold" x-text="team.name"></h4>
+                            <p class="text-sm text-gray-500 dark:text-gray-400" x-text="team.city"></p>
+                        </div>
+                    </template>
+                </div>
+            </div>
+            
+            <!-- División AFC Norte -->
+            <div class="division-card bg-white dark:bg-neutral-850 rounded-xl shadow-md p-6 mb-8 border border-gray-100 dark:border-neutral-700">
+                <h3 class="text-2xl font-bold mb-6 text-nfl-blue dark:text-nfl-red">AFC Norte</h3>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                    <template x-for="team in afcNorth" :key="team.id">
+                        <div class="team-logo bg-gray-100 dark:bg-neutral-800 rounded-lg p-4 text-center cursor-pointer" @click="openModal(team)">
+                            <div class="w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center text-white font-bold text-xl" :style="`background: ${team.color}`" x-text="team.abbr"></div>
+                            <h4 class="font-semibold" x-text="team.name"></h4>
+                            <p class="text-sm text-gray-500 dark:text-gray-400" x-text="team.city"></p>
+                        </div>
+                    </template>
+                </div>
+            </div>
+            
+            <!-- División AFC Sur -->
+            <div class="division-card bg-white dark:bg-neutral-850 rounded-xl shadow-md p-6 mb-8 border border-gray-100 dark:border-neutral-700">
+                <h3 class="text-2xl font-bold mb-6 text-nfl-blue dark:text-nfl-red">AFC Sur</h3>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                    <template x-for="team in afcSouth" :key="team.id">
+                        <div class="team-logo bg-gray-100 dark:bg-neutral-800 rounded-lg p-4 text-center cursor-pointer" @click="openModal(team)">
+                            <div class="w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center text-white font-bold text-xl" :style="`background: ${team.color}`" x-text="team.abbr"></div>
+                            <h4 class="font-semibold" x-text="team.name"></h4>
+                            <p class="text-sm text-gray-500 dark:text-gray-400" x-text="team.city"></p>
+                        </div>
+                    </template>
+                </div>
+            </div>
+            
+            <!-- División AFC Oeste -->
+            <div class="division-card bg-white dark:bg-neutral-850 rounded-xl shadow-md p-6 mb-8 border border-gray-100 dark:border-neutral-700">
+                <h3 class="text-2xl font-bold mb-6 text-nfl-blue dark:text-nfl-red">AFC Oeste</h3>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                    <template x-for="team in afcWest" :key="team.id">
+                        <div class="team-logo bg-gray-100 dark:bg-neutral-800 rounded-lg p-4 text-center cursor-pointer" @click="openModal(team)">
+                            <div class="w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center text-white font-bold text-xl" :style="`background: ${team.color}`" x-text="team.abbr"></div>
+                            <h4 class="font-semibold" x-text="team.name"></h4>
+                            <p class="text-sm text-gray-500 dark:text-gray-400" x-text="team.city"></p>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección de Conferencia NFC -->
+        <section x-show="selectedConference === 'all' || selectedConference === 'NFC'" class="mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-nfl-blue dark:text-nfl-red flex items-center">
+                <span class="w-3 h-3 bg-nfl-red rounded-full mr-2"></span>
+                Conferencia NFC
+            </h2>
+            
+            <!-- División NFC Este -->
+            <div class="division-card bg-white dark:bg-neutral-850 rounded-xl shadow-md p-6 mb-8 border border-gray-100 dark:border-neutral-700">
+                <h3 class="text-2xl font-bold mb-6 text-nfl-blue dark:text-nfl-red">NFC Este</h3>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                    <template x-for="team in nfcEast" :key="team.id">
+                        <div class="team-logo bg-gray-100 dark:bg-neutral-800 rounded-lg p-4 text-center cursor-pointer" @click="openModal(team)">
+                            <div class="w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center text-white font-bold text-xl" :style="`background: ${team.color}`" x-text="team.abbr"></div>
+                            <h4 class="font-semibold" x-text="team.name"></h4>
+                            <p class="text-sm text-gray-500 dark:text-gray-400" x-text="team.city"></p>
+                        </div>
+                    </template>
+                </div>
+            </div>
+            
+            <!-- División NFC Norte -->
+            <div class="division-card bg-white dark:bg-neutral-850 rounded-xl shadow-md p-6 mb-8 border border-gray-100 dark:border-neutral-700">
+                <h3 class="text-2xl font-bold mb-6 text-nfl-blue dark:text-nfl-red">NFC Norte</h3>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                    <template x-for="team in nfcNorth" :key="team.id">
+                        <div class="team-logo bg-gray-100 dark:bg-neutral-800 rounded-lg p-4 text-center cursor-pointer" @click="openModal(team)">
+                            <div class="w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center text-white font-bold text-xl" :style="`background: ${team.color}`" x-text="team.abbr"></div>
+                            <h4 class="font-semibold" x-text="team.name"></h4>
+                            <p class="text-sm text-gray-500 dark:text-gray-400" x-text="team.city"></p>
+                        </div>
+                    </template>
+                </div>
+            </div>
+            
+            <!-- División NFC Sur -->
+            <div class="division-card bg-white dark:bg-neutral-850 rounded-xl shadow-md p-6 mb-8 border border-gray-100 dark:border-neutral-700">
+                <h3 class="text-2xl font-bold mb-6 text-nfl-blue dark:text-nfl-red">NFC Sur</h3>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                    <template x-for="team in nfcSouth" :key="team.id">
+                        <div class="team-logo bg-gray-100 dark:bg-neutral-800 rounded-lg p-4 text-center cursor-pointer" @click="openModal(team)">
+                            <div class="w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center text-white font-bold text-xl" :style="`background: ${team.color}`" x-text="team.abbr"></div>
+                            <h4 class="font-semibold" x-text="team.name"></h4>
+                            <p class="text-sm text-gray-500 dark:text-gray-400" x-text="team.city"></p>
+                        </div>
+                    </template>
+                </div>
+            </div>
+            
+            <!-- División NFC Oeste -->
+            <div class="division-card bg-white dark:bg-neutral-850 rounded-xl shadow-md p-6 mb-8 border border-gray-100 dark:border-neutral-700">
+                <h3 class="text-2xl font-bold mb-6 text-nfl-blue dark:text-nfl-red">NFC Oeste</h3>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                    <template x-for="team in nfcWest" :key="team.id">
+                        <div class="team-logo bg-gray-100 dark:bg-neutral-800 rounded-lg p-4 text-center cursor-pointer" @click="openModal(team)">
+                            <div class="w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center text-white font-bold text-xl" :style="`background: ${team.color}`" x-text="team.abbr"></div>
+                            <h4 class="font-semibold" x-text="team.name"></h4>
+                            <p class="text-sm text-gray-500 dark:text-gray-400" x-text="team.city"></p>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </section>
+
+        <!-- Estadísticas de equipos -->
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-nfl-blue dark:text-nfl-red">Estadísticas por Equipos</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="stat-card bg-white dark:bg-neutral-850 p-6 rounded-xl shadow-md border border-gray-100 dark:border-neutral-700 text-center">
+                    <div class="text-4xl font-bold text-nfl-blue dark:text-nfl-red mb-2">6</div>
+                    <div class="text-lg font-semibold mb-1">Super Bowls</div>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">New England Patriots & Pittsburgh Steelers</p>
+                </div>
+                
+                <div class="stat-card bg-white dark:bg-neutral-850 p-6 rounded-xl shadow-md border border-gray-100 dark:border-neutral-700 text-center">
+                    <div class="text-4xl font-bold text-nfl-blue dark:text-nfl-red mb-2">13</div>
+                    <div class="text-lg font-semibold mb-1">Títulos de Conferencia</div>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">New England Patriots</p>
+                </div>
+                
+                <div class="stat-card bg-white dark:bg-neutral-850 p-6 rounded-xl shadow-md border border-gray-100 dark:border-neutral-700 text-center">
+                    <div class="text-4xl font-bold text-nfl-blue dark:text-nfl-red mb-2">22</div>
+                    <div class="text-lg font-semibold mb-1">Títulos de División</div>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Dallas Cowboys</p>
+                </div>
+                
+                <div class="stat-card bg-white dark:bg-neutral-850 p-6 rounded-xl shadow-md border border-gray-100 dark:border-neutral-700 text-center">
+                    <div class="text-4xl font-bold text-nfl-blue dark:text-nfl-red mb-2">4</div>
+                    <div class="text-lg font-semibold mb-1">Equipos sin Super Bowl</div>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Cleveland Browns, Detroit Lions, Jacksonville Jaguars, Houston Texans</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Modal de información del equipo -->
+        <div x-show="isModalOpen" class="fixed inset-0 z-50 overflow-y-auto team-modal-overlay" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div x-show="isModalOpen" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" 
+                    x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" 
+                    class="fixed inset-0 bg-gray-500 dark:bg-gray-900 bg-opacity-75 dark:bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                <div x-show="isModalOpen" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
+                    x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" 
+                    x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
+                    class="team-modal inline-block align-bottom bg-white dark:bg-neutral-850 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                    
+                    <template x-if="selectedTeam">
+                        <div class="bg-white dark:bg-neutral-850 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                            <div class="sm:flex sm:items-start">
+                                <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full sm:mx-0 sm:h-16 sm:w-16 text-white text-xl font-bold" :style="`background: ${selectedTeam.color}`" x-text="selectedTeam.abbr"></div>
+                                <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                                    <div class="flex items-center">
+                                        <h3 class="text-2xl leading-6 font-bold text-gray-900 dark:text-white" x-text="selectedTeam.name"></h3>
+                                        <span class="conference-badge" :class="selectedTeam.conference === 'AFC' ? 'afc-badge' : 'nfc-badge'" x-text="selectedTeam.conference"></span>
+                                    </div>
+                                    <div class="mt-2">
+                                        <p class="text-sm text-gray-500 dark:text-gray-400" x-text="selectedTeam.stadium"></p>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">Fundado en <span x-text="selectedTeam.founded"></span></p>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400" x-text="selectedTeam.division + ' Division'"></p>
+                                        
+                                        <div class="mt-4">
+                                            <h4 class="font-semibold text-nfl-blue dark:text-nfl-red">Títulos</h4>
+                                            <ul class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                                <li>Super Bowls: <span class="font-semibold" x-text="selectedTeam.superBowls"></span></li>
+                                                <li>Campeonatos de Conferencia: <span class="font-semibold" x-text="selectedTeam.conferenceChampionships"></span></li>
+                                                <li>Campeonatos de División: <span class="font-semibold" x-text="selectedTeam.divisionChampionships"></span></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                    
+                    <div class="bg-gray-50 dark:bg-neutral-800 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                        <button type="button" @click="isModalOpen = false" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-neutral-700 shadow-sm px-4 py-2 bg-white dark:bg-neutral-800 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-nfl-blue sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                            Cerrar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-100 dark:bg-neutral-850 border-t border-gray-200 dark:border-neutral-700 py-12 mt-16">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center">
+                        <i class="fas fa-football mr-2 text-nfl-blue dark:text-nfl-red"></i>NFL Blog
+                    </h3>
+                    <p class="text-gray-600 dark:text-gray-300 text-sm">
+                        Tu fuente confiable de noticias, análisis y estadísticas de la National Football League.
+                    </p>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Secciones</h4>
+                    <ul class="space-y-2">
+                        <li><a href="index.html#inicio" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Inicio</a></li>
+                        <li><a href="equipos-nfl.html" class="text-nfl-blue dark:text-nfl-red text-sm">Equipos</a></li>
+                        <li><a href="index.html#articulos" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Artículos</a></li>
+                        <li><a href="index.html#estadisticas" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Estadísticas</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Equipos</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">AFC Oeste</a></li>
+                        <li><a href="#" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">NFC Este</a></li>
+                        <li><a href="#" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">AFC Norte</a></li>
+                        <li><a href="#" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">NFC Oeste</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Síguenos</h4>
+                    <div class="flex space-x-4 mb-6">
+                        <a href="#" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-nfl-red">
+                            <i class="fab fa-twitter text-lg"></i>
+                        </a>
+                        <a href="#" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-nfl-red">
+                            <i class="fab fa-facebook text-lg"></i>
+                        </a>
+                        <a href="#" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-nfl-red">
+                            <i class="fab fa-instagram text-lg"></i>
+                        </a>
+                        <a href="#" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-nfl-red">
+                            <i class="fab fa-youtube text-lg"></i>
+                        </a>
+                    </div>
+                    
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">Newsletter</h4>
+                    <div class="flex">
+                        <input type="email" placeholder="Tu email" class="px-3 py-2 border border-gray-300 dark:border-neutral-700 rounded-l text-sm w-full dark:bg-neutral-800">
+                        <button class="bg-nfl-blue text-white px-3 py-2 rounded-r text-sm">Suscribir</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-8 text-center text-gray-500 dark:text-gray-400 text-sm">
+                <p>© 2023 NFL Blog. Este sitio no está afiliado oficialmente con la NFL. Todas las marcas registradas son propiedad de sus respectivos dueños.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Función para gestionar los equipos de la NFL
+        function nflTeams() {
+            return {
+                isDark: false,
+                selectedConference: 'all',
+                isModalOpen: false,
+                selectedTeam: null,
+                teams: [
+                    // AFC Este
+                    { id: 1, name: 'Bills', city: 'Buffalo', abbr: 'BUF', conference: 'AFC', division: 'AFC Este', color: '#00338D', stadium: 'Highmark Stadium', founded: 1960, superBowls: 0, conferenceChampionships: 4, divisionChampionships: 13 },
+                    { id: 2, name: 'Dolphins', city: 'Miami', abbr: 'MIA', conference: 'AFC', division: 'AFC Este', color: '#008E97', stadium: 'Hard Rock Stadium', founded: 1966, superBowls: 2, conferenceChampionships: 5, divisionChampionships: 13 },
+                    { id: 3, name: 'Patriots', city: 'New England', abbr: 'NE', conference: 'AFC', division: 'AFC Este', color: '#002244', stadium: 'Gillette Stadium', founded: 1960, superBowls: 6, conferenceChampionships: 11, divisionChampionships: 22 },
+                    { id: 4, name: 'Jets', city: 'New York', abbr: 'NYJ', conference: 'AFC', division: 'AFC Este', color: '#125740', stadium: 'MetLife Stadium', founded: 1960, superBowls: 1, conferenceChampionships: 0, divisionChampionships: 4 },
+                    
+                    // AFC Norte
+                    { id: 5, name: 'Ravens', city: 'Baltimore', abbr: 'BAL', conference: 'AFC', division: 'AFC Norte', color: '#241773', stadium: 'M&T Bank Stadium', founded: 1996, superBowls: 2, conferenceChampionships: 2, divisionChampionships: 6 },
+                    { id: 6, name: 'Bengals', city: 'Cincinnati', abbr: 'CIN', conference: 'AFC', division: 'AFC Norte', color: '#FB4F14', stadium: 'Paycor Stadium', founded: 1968, superBowls: 0, conferenceChampionships: 3, divisionChampionships: 10 },
+                    { id: 7, name: 'Browns', city: 'Cleveland', abbr: 'CLE', conference: 'AFC', division: 'AFC Norte', color: '#311D00', stadium: 'FirstEnergy Stadium', founded: 1946, superBowls: 0, conferenceChampionships: 0, divisionChampionships: 12 },
+                    { id: 8, name: 'Steelers', city: 'Pittsburgh', abbr: 'PIT', conference: 'AFC', division: 'AFC Norte', color: '#FFB612', stadium: 'Acrisure Stadium', founded: 1933, superBowls: 6, conferenceChampionships: 8, divisionChampionships: 24 },
+                    
+                    // AFC Sur
+                    { id: 9, name: 'Texans', city: 'Houston', abbr: 'HOU', conference: 'AFC', division: 'AFC Sur', color: '#03202F', stadium: 'NRG Stadium', founded: 2002, superBowls: 0, conferenceChampionships: 0, divisionChampionships: 6 },
+                    { id: 10, name: 'Colts', city: 'Indianapolis', abbr: 'IND', conference: 'AFC', division: 'AFC Sur', color: '#002C5F', stadium: 'Lucas Oil Stadium', founded: 1953, superBowls: 2, conferenceChampionships: 4, divisionChampionships: 16 },
+                    { id: 11, name: 'Jaguars', city: 'Jacksonville', abbr: 'JAX', conference: 'AFC', division: 'AFC Sur', color: '#006778', stadium: 'TIAA Bank Field', founded: 1995, superBowls: 0, conferenceChampionships: 0, divisionChampionships: 3 },
+                    { id: 12, name: 'Titans', city: 'Tennessee', abbr: 'TEN', conference: 'AFC', division: 'AFC Sur', color: '#0C2340', stadium: 'Nissan Stadium', founded: 1960, superBowls: 0, conferenceChampionships: 1, divisionChampionships: 11 },
+                    
+                    // AFC Oeste
+                    { id: 13, name: 'Broncos', city: 'Denver', abbr: 'DEN', conference: 'AFC', division: 'AFC Oeste', color: '#FB4F14', stadium: 'Empower Field at Mile High', founded: 1960, superBowls: 3, conferenceChampionships: 8, divisionChampionships: 15 },
+                    { id: 14, name: 'Chiefs', city: 'Kansas City', abbr: 'KC', conference: 'AFC', division: 'AFC Oeste', color: '#E31837', stadium: 'GEHA Field at Arrowhead Stadium', founded: 1960, superBowls: 3, conferenceChampionships: 5, divisionChampionships: 15 },
+                    { id: 15, name: 'Raiders', city: 'Las Vegas', abbr: 'LV', conference: 'AFC', division: 'AFC Oeste', color: '#000000', stadium: 'Allegiant Stadium', founded: 1960, superBowls: 3, conferenceChampionships: 4, divisionChampionships: 15 },
+                    { id: 16, name: 'Chargers', city: 'Los Angeles', abbr: 'LAC', conference: 'AFC', division: 'AFC Oeste', color: '#0080C6', stadium: 'SoFi Stadium', founded: 1960, superBowls: 0, conferenceChampionships: 1, divisionChampionships: 15 },
+                    
+                    // NFC Este
+                    { id: 17, name: 'Cowboys', city: 'Dallas', abbr: 'DAL', conference: 'NFC', division: 'NFC Este', color: '#041E42', stadium: 'AT&T Stadium', founded: 1960, superBowls: 5, conferenceChampionships: 10, divisionChampionships: 24 },
+                    { id: 18, name: 'Giants', city: 'New York', abbr: 'NYG', conference: 'NFC', division: 'NFC Este', color: '#0B2265', stadium: 'MetLife Stadium', founded: 1925, superBowls: 4, conferenceChampionships: 11, divisionChampionships: 16 },
+                    { id: 19, name: 'Eagles', city: 'Philadelphia', abbr: 'PHI', conference: 'NFC', division: 'NFC Este', color: '#004C54', stadium: 'Lincoln Financial Field', founded: 1933, superBowls: 1, conferenceChampionships: 4, divisionChampionships: 11 },
+                    { id: 20, name: 'Commanders', city: 'Washington', abbr: 'WSH', conference: 'NFC', division: 'NFC Este', color: '#5A1414', stadium: 'FedExField', founded: 1932, superBowls: 3, conferenceChampionships: 5, divisionChampionships: 15 },
+                    
+                    // NFC Norte
+                    { id: 21, name: 'Bears', city: 'Chicago', abbr: 'CHI', conference: 'NFC', division: 'NFC Norte', color: '#0B162A', stadium: 'Soldier Field', founded: 1920, superBowls: 1, conferenceChampionships: 4, divisionChampionships: 18 },
+                    { id: 22, name: 'Lions', city: 'Detroit', abbr: 'DET', conference: 'NFC', division: 'NFC Norte', color: '#0076B6', stadium: 'Ford Field', founded: 1930, superBowls: 0, conferenceChampionships: 4, divisionChampionships: 4 },
+                    { id: 23, name: 'Packers', city: 'Green Bay', abbr: 'GB', conference: 'NFC', division: 'NFC Norte', color: '#203731', stadium: 'Lambeau Field', founded: 1919, superBowls: 4, conferenceChampionships: 5, divisionChampionships: 19 },
+                    { id: 24, name: 'Vikings', city: 'Minnesota', abbr: 'MIN', conference: 'NFC', division: 'NFC Norte', color: '#4F2683', stadium: 'U.S. Bank Stadium', founded: 1961, superBowls: 0, conferenceChampionships: 4, divisionChampionships: 20 },
+                    
+                    // NFC Sur
+                    { id: 25, name: 'Falcons', city: 'Atlanta', abbr: 'ATL', conference: 'NFC', division: 'NFC Sur', color: '#A71930', stadium: 'Mercedes-Benz Stadium', founded: 1966, superBowls: 0, conferenceChampionships: 2, divisionChampionships: 6 },
+                    { id: 26, name: 'Panthers', city: 'Carolina', abbr: 'CAR', conference: 'NFC', division: 'NFC Sur', color: '#0085CA', stadium: 'Bank of America Stadium', founded: 1995, superBowls: 0, conferenceChampionships: 2, divisionChampionships: 6 },
+                    { id: 27, name: 'Saints', city: 'New Orleans', abbr: 'NO', conference: 'NFC', division: 'NFC Sur', color: '#D3BC8D', stadium: 'Caesars Superdome', founded: 1967, superBowls: 1, conferenceChampionships: 1, divisionChampionships: 8 },
+                    { id: 28, name: 'Buccaneers', city: 'Tampa Bay', abbr: 'TB', conference: 'NFC', division: 'NFC Sur', color: '#D50A0A', stadium: 'Raymond James Stadium', founded: 1976, superBowls: 2, conferenceChampionships: 2, divisionChampionships: 7 },
+                    
+                    // NFC Oeste
+                    { id: 29, name: 'Cardinals', city: 'Arizona', abbr: 'ARI', conference: 'NFC', division: 'NFC Oeste', color: '#97233F', stadium: 'State Farm Stadium', founded: 1898, superBowls: 0, conferenceChampionships: 1, divisionChampionships: 7 },
+                    { id: 30, name: 'Rams', city: 'Los Angeles', abbr: 'LAR', conference: 'NFC', division: 'NFC Oeste', color: '#003594', stadium: 'SoFi Stadium', founded: 1936, superBowls: 2, conferenceChampionships: 5, divisionChampionships: 17 },
+                    { id: 31, name: '49ers', city: 'San Francisco', abbr: 'SF', conference: 'NFC', division: 'NFC Oeste', color: '#AA0000', stadium: 'Levi\'s Stadium', founded: 1944, superBowls: 5, conferenceChampionships: 7, divisionChampionships: 20 },
+                    { id: 32, name: 'Seahawks', city: 'Seattle', abbr: 'SEA', conference: 'NFC', division: 'NFC Oeste', color: '#002244', stadium: 'Lumen Field', founded: 1976, superBowls: 1, conferenceChampionships: 3, divisionChampionships: 10 }
+                ],
+                init() {
+                    // Obtener el tema guardado o detectar la preferencia del sistema
+                    const savedTheme = localStorage.getItem('theme');
+                    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    
+                    this.isDark = savedTheme ? savedTheme === 'dark' : systemPrefersDark;
+                    
+                    // Aplicar el tema al inicializar
+                    this.applyTheme();
+                },
+                toggleTheme() {
+                    this.isDark = !this.isDark;
+                    this.applyTheme();
+                    localStorage.setItem('theme', this.isDark ? 'dark' : 'light');
+                },
+                applyTheme() {
+                    if (this.isDark) {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
+                },
+                openModal(team) {
+                    this.selectedTeam = team;
+                    this.isModalOpen = true;
+                },
+                get afcEast() {
+                    return this.teams.filter(team => team.division === 'AFC Este');
+                },
+                get afcNorth() {
+                    return this.teams.filter(team => team.division === 'AFC Norte');
+                },
+                get afcSouth() {
+                    return this.teams.filter(team => team.division === 'AFC Sur');
+                },
+                get afcWest() {
+                    return this.teams.filter(team => team.division === 'AFC Oeste');
+                },
+                get nfcEast() {
+                    return this.teams.filter(team => team.division === 'NFC Este');
+                },
+                get nfcNorth() {
+                    return this.teams.filter(team => team.division === 'NFC Norte');
+                },
+                get nfcSouth() {
+                    return this.teams.filter(team => team.division === 'NFC Sur');
+                },
+                get nfcWest() {
+                    return this.teams.filter(team => team.division === 'NFC Oeste');
+                }
+            }
+        }
+
+        // Barra de progreso de lectura
+        window.addEventListener('scroll', function() {
+            const winHeight = window.innerHeight;
+            const docHeight = document.documentElement.scrollHeight;
+            const scrollTop = window.pageYOffset;
+            const trackLength = docHeight - winHeight;
+            const progress = Math.floor((scrollTop / trackLength) * 100);
+            document.getElementById('reading-progress').style.width = progress + '%';
+        });
+
+        // Inicializar el tema al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ya está manejado por Alpine.js, pero por si acaso
+            const savedTheme = localStorage.getItem('theme');
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const isDark = savedTheme ? savedTheme === 'dark' : systemPrefersDark;
+            
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+    </script>
+</body>
+</html>

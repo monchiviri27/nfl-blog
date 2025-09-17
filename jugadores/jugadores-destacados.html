@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jugadores Destacados NFL | NFL Blog</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        nfl: {
+                            blue: '#013369',
+                            red: '#D50A0A',
+                            silver: '#A5ACAF'
+                        },
+                        neutral: {
+                            850: '#1e1e1e',
+                            950: '#0f0f0f'
+                        }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .article-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .article-card:hover {
+            transform: translateY(-5px);
+        }
+        .player-card {
+            transition: all 0.3s ease;
+        }
+        .player-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .dark .player-card:hover {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #013369 0%, #D50A0A 100%);
+        }
+        .prose {
+            max-width: none;
+        }
+        .prose h2 {
+            font-weight: 700;
+            font-size: 1.5em;
+            margin-top: 2em;
+            margin-bottom: 1em;
+            color: #013369;
+        }
+        .dark .prose h2 {
+            color: #D50A0A;
+        }
+        .prose p {
+            margin-bottom: 1.25em;
+            line-height: 1.7;
+        }
+        .theme-transition * {
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+        .reading-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 4px;
+            background: linear-gradient(90deg, #013369, #D50A0A);
+            z-index: 9999;
+        }
+        .position-filter {
+            transition: all 0.3s ease;
+        }
+        .position-filter.active {
+            background: linear-gradient(135deg, #013369 0%, #D50A0A 100%);
+            color: white;
+        }
+        .player-image {
+            transition: transform 0.5s ease;
+        }
+        .player-card:hover .player-image {
+            transform: scale(1.05);
+        }
+        .stat-bar {
+            height: 8px;
+            border-radius: 4px;
+            background-color: #e5e7eb;
+            overflow: hidden;
+        }
+        .dark .stat-bar {
+            background-color: #374151;
+        }
+        .stat-progress {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 1s ease-in-out;
+        }
+        .player-modal {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        .player-modal-overlay {
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+    </style>
+</head>
+<body x-data="nflPlayers()" x-bind:class="{'dark': isDark}" class="theme-transition bg-white dark:bg-neutral-950 text-gray-800 dark:text-gray-200 min-h-screen">
+    <!-- Barra de progreso de lectura -->
+    <div class="reading-progress" id="reading-progress"></div>
+
+    <!-- Navegación fija -->
+    <nav class="fixed w-full bg-white/90 dark:bg-neutral-850/90 backdrop-blur-sm py-4 z-50 border-b border-gray-200 dark:border-neutral-700 shadow-sm">
+        <div class="container mx-auto px-4 flex justify-between items-center">
+            <a href="index.html" class="text-2xl font-bold text-nfl-blue dark:text-white flex items-center">
+                <i class="fas fa-football mr-2"></i>NFL Blog
+            </a>
+            
+            <div class="flex items-center space-x-6">
+                <a href="../index.html#inicio" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Inicio</a>
+                <a href="equipos-nfl.html" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Equipos</a>
+                <a href="jugadores-destacados.html" class="text-nfl-blue dark:text-nfl-red font-medium">Jugadores</a>
+                <a href="index.html#articulos" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Artículos</a>
+                <a href="index.html#estadisticas" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Estadísticas</a>
+                
+                <!-- Selector de tema -->
+                <div class="flex items-center space-x-2">
+                    <span x-show="!isDark"><i class="fas fa-sun text-yellow-500"></i></span>
+                    <span x-show="isDark"><i class="fas fa-moon text-blue-300"></i></span>
+                    
+                    <button 
+                        @click="toggleTheme()"
+                        :aria-label="isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+                        class="w-12 h-6 bg-gray-300 dark:bg-nfl-blue rounded-full p-1 relative focus:outline-none focus:ring-2 focus:ring-nfl-blue"
+                    >
+                        <span class="w-4 h-4 bg-white dark:bg-gray-200 rounded-full shadow-md block transform transition-transform duration-300" :class="{'translate-x-6': isDark}"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Espacio para la navegación fija -->
+    <div class="h-20"></div>
+
+    <!-- Contenido principal -->
+    <main class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Encabezado de la página -->
+        <div class="mb-12 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold text-nfl-blue dark:text-nfl-red mb-4">Jugadores Destacados NFL 2023</h1>
+            <p class="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+                Conoce a las estrellas que están dominando la liga esta temporada. Quarterbacks, receptores, corredores y defensas que están marcando la diferencia.
+            </p>
+        </div>
+
+        <!-- Filtros por posición -->
+        <div class="mb-10">
+            <h2 class="text-2xl font-bold mb-4 text-nfl-blue dark:text-nfl-red">Filtrar por posición</h2>
+            <div class="flex flex-wrap gap-2">
+                <button 
+                    @click="selectedPosition = 'all'" 
+                    :class="{'active': selectedPosition === 'all'}"
+                    class="position-filter px-4 py-2 rounded-lg bg-gray-100 dark:bg-neutral-800 hover:bg-gray-200 dark:hover:bg-neutral-700"
+                >
+                    Todos
+                </button>
+                <button 
+                    @click="selectedPosition = 'QB'" 
+                    :class="{'active': selectedPosition === 'QB'}"
+                    class="position-filter px-4 py-2 rounded-lg bg-gray-100 dark:bg-neutral-800 hover:bg-gray-200 dark:hover:bg-neutral-700"
+                >
+                    Quarterbacks
+                </button>
+                <button 
+                    @click="selectedPosition = 'WR'" 
+                    :class="{'active': selectedPosition === 'WR'}"
+                    class="position-filter px-4 py-2 rounded-lg bg-gray-100 dark:bg-neutral-800 hover:bg-gray-200 dark:hover:bg-neutral-700"
+                >
+                    Receptores
+                </button>
+                <button 
+                    @click="selectedPosition = 'RB'" 
+                    :class="{'active': selectedPosition === 'RB'}"
+                    class="position-filter px-4 py-2 rounded-lg bg-gray-100 dark:bg-neutral-800 hover:bg-gray-200 dark:hover:bg-neutral-700"
+                >
+                    Corredores
+                </button>
+                <button 
+                    @click="selectedPosition = 'DEF'" 
+                    :class="{'active': selectedPosition === 'DEF'}"
+                    class="position-filter px-4 py-2 rounded-lg bg-gray-100 dark:bg-neutral-800 hover:bg-gray-200 dark:hover:bg-neutral-700"
+                >
+                    Defensas
+                </button>
+            </div>
+        </div>
+
+        <!-- Jugadores Destacados -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+            <template x-for="player in filteredPlayers" :key="player.id">
+                <div class="player-card bg-white dark:bg-neutral-850 rounded-xl overflow-hidden shadow-md border border-gray-100 dark:border-neutral-700 cursor-pointer" @click="openModal(player)">
+                    <div class="relative overflow-hidden">
+                        <div class="h-48 bg-gray-200 dark:bg-neutral-800 overflow-hidden">
+                            <div class="w-full h-full flex items-center justify-center text-5xl font-bold opacity-30" :style="`color: ${player.teamColor}`" x-text="player.number"></div>
+                        </div>
+                        <div class="absolute bottom-3 left-3">
+                            <span class="text-xs font-semibold bg-nfl-blue text-white px-2 py-1 rounded" x-text="player.position"></span>
+                        </div>
+                    </div>
+                    <div class="p-5">
+                        <h3 class="text-xl font-bold mb-1" x-text="player.name"></h3>
+                        <div class="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-3">
+                            <span x-text="player.team"></span>
+                            <span class="mx-2">•</span>
+                            <span x-text="player.experience"></span>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-3 mt-4">
+                            <div>
+                                <p class="text-sm font-semibold text-nfl-blue dark:text-nfl-red">TD</p>
+                                <p class="text-lg font-bold" x-text="player.stats.touchdowns"></p>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-nfl-blue dark:text-nfl-red">YDS</p>
+                                <p class="text-lg font-bold" x-text="player.stats.yards"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <!-- Estadísticas comparativas -->
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-nfl-blue dark:text-nfl-red">Estadísticas Comparativas</h2>
+            
+            <div class="bg-white dark:bg-neutral-850 rounded-xl shadow-md p-6 border border-gray-100 dark:border-neutral-700">
+                <h3 class="text-xl font-bold mb-6 text-nfl-blue dark:text-nfl-red">Líderes en Yardas por Posición</h3>
+                
+                <!-- Quarterbacks -->
+                <div class="mb-8">
+                    <h4 class="text-lg font-semibold mb-4 flex items-center">
+                        <i class="fas fa-football mr-2 text-nfl-blue"></i>
+                        Quarterbacks - Yardas por pase
+                    </h4>
+                    <template x-for="qb in qbLeaders" :key="qb.id">
+                        <div class="mb-3">
+                            <div class="flex justify-between text-sm mb-1">
+                                <span x-text="qb.name"></span>
+                                <span class="font-semibold" x-text="qb.stats.yards + ' YDS'"></span>
+                            </div>
+                            <div class="stat-bar">
+                                <div class="stat-progress bg-nfl-blue" :style="'width: ' + (qb.stats.yards / maxQbYards * 100) + '%'"></div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+                
+                <!-- Receptores -->
+                <div class="mb-8">
+                    <h4 class="text-lg font-semibold mb-4 flex items-center">
+                        <i class="fas fa-football mr-2 text-nfl-red"></i>
+                        Receptores - Yardas por recepción
+                    </h4>
+                    <template x-for="wr in wrLeaders" :key="wr.id">
+                        <div class="mb-3">
+                            <div class="flex justify-between text-sm mb-1">
+                                <span x-text="wr.name"></span>
+                                <span class="font-semibold" x-text="wr.stats.yards + ' YDS'"></span>
+                            </div>
+                            <div class="stat-bar">
+                                <div class="stat-progress bg-nfl-red" :style="'width: ' + (wr.stats.yards / maxWrYards * 100) + '%'"></div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+                
+                <!-- Corredores -->
+                <div>
+                    <h4 class="text-lg font-semibold mb-4 flex items-center">
+                        <i class="fas fa-running mr-2 text-nfl-blue"></i>
+                        Corredores - Yardas terrestres
+                    </h4>
+                    <template x-for="rb in rbLeaders" :key="rb.id">
+                        <div class="mb-3">
+                            <div class="flex justify-between text-sm mb-1">
+                                <span x-text="rb.name"></span>
+                                <span class="font-semibold" x-text="rb.stats.yards + ' YDS'"></span>
+                            </div>
+                            <div class="stat-bar">
+                                <div class="stat-progress bg-nfl-blue" :style="'width: ' + (rb.stats.yards / maxRbYards * 100) + '%'"></div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </section>
+
+        <!-- Modal de información del jugador -->
+        <div x-show="isModalOpen" class="fixed inset-0 z-50 overflow-y-auto player-modal-overlay" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div x-show="isModalOpen" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" 
+                    x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" 
+                    class="fixed inset-0 bg-gray-500 dark:bg-gray-900 bg-opacity-75 dark:bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                <div x-show="isModalOpen" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
+                    x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" 
+                    x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
+                    class="player-modal inline-block align-bottom bg-white dark:bg-neutral-850 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                    
+                    <template x-if="selectedPlayer">
+                        <div>
+                            <div class="bg-gray-100 dark:bg-neutral-800 px-4 py-5 sm:px-6 flex justify-between items-center">
+                                <div>
+                                    <h3 class="text-2xl leading-6 font-bold text-gray-900 dark:text-white" x-text="selectedPlayer.name"></h3>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1" x-text="selectedPlayer.position + ' • ' + selectedPlayer.team"></p>
+                                </div>
+                                <span class="text-3xl font-bold opacity-20" x-text="selectedPlayer.number"></span>
+                            </div>
+                            
+                            <div class="px-4 pt-5 pb-4 sm:p-6">
+                                <div class="grid grid-cols-2 gap-4 mb-6">
+                                    <div class="text-center p-3 bg-gray-50 dark:bg-neutral-800 rounded-lg">
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">Altura</p>
+                                        <p class="font-semibold" x-text="selectedPlayer.height"></p>
+                                    </div>
+                                    <div class="text-center p-3 bg-gray-50 dark:bg-neutral-800 rounded-lg">
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">Peso</p>
+                                        <p class="font-semibold" x-text="selectedPlayer.weight"></p>
+                                    </div>
+                                    <div class="text-center p-3 bg-gray-50 dark:bg-neutral-800 rounded-lg">
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">Edad</p>
+                                        <p class="font-semibold" x-text="selectedPlayer.age"></p>
+                                    </div>
+                                    <div class="text-center p-3 bg-gray-50 dark:bg-neutral-800 rounded-lg">
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">Universidad</p>
+                                        <p class="font-semibold" x-text="selectedPlayer.college"></p>
+                                    </div>
+                                </div>
+                                
+                                <h4 class="font-semibold text-nfl-blue dark:text-nfl-red mb-3">Estadísticas 2023</h4>
+                                <div class="space-y-3">
+                                    <template x-for="(value, stat) in selectedPlayer.stats" :key="stat">
+                                        <div>
+                                            <div class="flex justify-between text-sm mb-1">
+                                                <span class="capitalize" x-text="stat.replace('_', ' ')"></span>
+                                                <span class="font-semibold" x-text="value"></span>
+                                            </div>
+                                            <div class="stat-bar">
+                                                <div class="stat-progress bg-nfl-blue" :style="'width: ' + (value / selectedPlayer.maxStats[stat] * 100) + '%'"></div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                                
+                                <div class="mt-6">
+                                    <h4 class="font-semibold text-nfl-blue dark:text-nfl-red mb-2">Logros</h4>
+                                    <ul class="text-sm text-gray-500 dark:text-gray-400">
+                                        <template x-for="achievement in selectedPlayer.achievements" :key="achievement">
+                                            <li class="mb-1 flex items-center">
+                                                <i class="fas fa-trophy text-yellow-500 mr-2"></i>
+                                                <span x-text="achievement"></span>
+                                            </li>
+                                        </template>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-gray-50 dark:bg-neutral-800 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                                <button type="button" @click="isModalOpen = false" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-neutral-700 shadow-sm px-4 py-2 bg-white dark:bg-neutral-800 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-nfl-blue sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                                    Cerrar
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-100 dark:bg-neutral-850 border-t border-gray-200 dark:border-neutral-700 py-12 mt-16">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center">
+                        <i class="fas fa-football mr-2 text-nfl-blue dark:text-nfl-red"></i>NFL Blog
+                    </h3>
+                    <p class="text-gray-600 dark:text-gray-300 text-sm">
+                        Tu fuente confiable de noticias, análisis y estadísticas de la National Football League.
+                    </p>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Secciones</h4>
+                    <ul class="space-y-2">
+                        <li><a href="index.html#inicio" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Inicio</a></li>
+                        <li><a href="equipos-nfl.html" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Equipos</a></li>
+                        <li><a href="jugadores-destacados.html" class="text-nfl-blue dark:text-nfl-red text-sm">Jugadores</a></li>
+                        <li><a href="index.html#articulos" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Artículos</a></li>
+                        <li><a href="index.html#estadisticas" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Estadísticas</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Equipos</h4>
+                    <ul class="space-y-2">
+                        <li><a href="equipos-nfl.html" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">AFC Oeste</a></li>
+                        <li><a href="equipos-nfl.html" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">NFC Este</a></li>
+                        <li><a href="equipos-nfl.html" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">AFC Norte</a></li>
+                        <li><a href="equipos-nfl.html" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">NFC Oeste</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Síguenos</h4>
+                    <div class="flex space-x-4 mb-6">
+                        <a href="#" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-nfl-red">
+                            <i class="fab fa-twitter text-lg"></i>
+                        </a>
+                        <a href="#" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-nfl-red">
+                            <i class="fab fa-facebook text-lg"></i>
+                        </a>
+                        <a href="#" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-nfl-red">
+                            <i class="fab fa-instagram text-lg"></i>
+                        </a>
+                        <a href="#" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-nfl-red">
+                            <i class="fab fa-youtube text-lg"></i>
+                        </a>
+                    </div>
+                    
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">Newsletter</h4>
+                    <div class="flex">
+                        <input type="email" placeholder="Tu email" class="px-3 py-2 border border-gray-300 dark:border-neutral-700 rounded-l text-sm w-full dark:bg-neutral-800">
+                        <button class="bg-nfl-blue text-white px-3 py-2 rounded-r text-sm">Suscribir</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-8 text-center text-gray-500 dark:text-gray-400 text-sm">
+                <p>© 2023 NFL Blog. Este sitio no está afiliado oficialmente con la NFL. Todas las marcas registradas son propiedad de sus respectivos dueños.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Función para gestionar los jugadores de la NFL
+        function nflPlayers() {
+            return {
+                isDark: false,
+                selectedPosition: 'all',
+                isModalOpen: false,
+                selectedPlayer: null,
+                players: [
+                    {
+                        id: 1,
+                        name: 'Patrick Mahomes',
+                        position: 'QB',
+                        team: 'Kansas City Chiefs',
+                        teamColor: '#E31837',
+                        number: '15',
+                        experience: '7ª temporada',
+                        height: '1.88 m',
+                        weight: '104 kg',
+                        age: 28,
+                        college: 'Texas Tech',
+                        stats: {
+                            touchdowns: 38,
+                            yards: '4,842',
+                            interceptions: 12,
+                            rating: '105.2',
+                            completions: '385'
+                        },
+                        maxStats: {
+                            touchdowns: 38,
+                            yards: 4842,
+                            interceptions: 18,
+                            rating: 105.2,
+                            completions: 385
+                        },
+                        achievements: [
+                            '2x Super Bowl MVP',
+                            '2x MVP de la NFL',
+                            '5x Pro Bowl',
+                            '2x Primer equipo All-Pro'
+                        ]
+                    },
+                    {
+                        id: 2,
+                        name: 'Jalen Hurts',
+                        position: 'QB',
+                        team: 'Philadelphia Eagles',
+                        teamColor: '#004C54',
+                        number: '1',
+                        experience: '4ª temporada',
+                        height: '1.85 m',
+                        weight: '102 kg',
+                        age: 25,
+                        college: 'Oklahoma',
+                        stats: {
+                            touchdowns: 35,
+                            yards: '4,461',
+                            interceptions: 10,
+                            rating: '101.5',
+                            completions: '362'
+                        },
+                        maxStats: {
+                            touchdowns: 38,
+                            yards: 4842,
+                            interceptions: 18,
+                            rating: 105.2,
+                            completions: 385
+                        },
+                        achievements: [
+                            'Pro Bowl (2022)',
+                            'Máximo TD terrestres QB (2022)',
+                            'Subcampeón del Super Bowl LVII'
+                        ]
+                    },
+                    {
+                        id: 3,
+                        name: 'Justin Jefferson',
+                        position: 'WR',
+                        team: 'Minnesota Vikings',
+                        teamColor: '#4F2683',
+                        number: '18',
+                        experience: '4ª temporada',
+                        height: '1.88 m',
+                        weight: '93 kg',
+                        age: 24,
+                        college: 'LSU',
+                        stats: {
+                            touchdowns: 14,
+                            yards: '1,809',
+                            receptions: 128,
+                            yards_after_catch: '567',
+                            longest: '64'
+                        },
+                        maxStats: {
+                            touchdowns: 14,
+                            yards: 1809,
+                            receptions: 128,
+                            yards_after_catch: 567,
+                            longest: 64
+                        },
+                        achievements: [
+                            'OPOY (2022)',
+                            '3x Pro Bowl',
+                            '2x Primer equipo All-Pro',
+                            'Récord de más yardas en primeras 3 temporadas'
+                        ]
+                    },
+                    {
+                        id: 4,
+                        name: 'Tyreek Hill',
+                        position: 'WR',
+                        team: 'Miami Dolphins',
+                        teamColor: '#008E97',
+                        number: '10',
+                        experience: '8ª temporada',
+                        height: '1.78 m',
+                        weight: '83 kg',
+                        age: 29,
+                        college: 'West Alabama',
+                        stats: {
+                            touchdowns: 12,
+                            yards: '1,710',
+                            receptions: 119,
+                            yards_after_catch: '643',
+                            longest: '76'
+                        },
+                        maxStats: {
+                            touchdowns: 14,
+                            yards: 1809,
+                            receptions: 128,
+                            yards_after_catch: 643,
+                            longest: 76
+                        },
+                        achievements: [
+                            '6x Pro Bowl',
+                            '4x Primer equipo All-Pro',
+                            'Super Bowl LIV',
+                            'Equipo de la década 2010'
+                        ]
+                    },
+                    {
+                        id: 5,
+                        name: 'Nick Bosa',
+                        position: 'DEF',
+                        team: 'San Francisco 49ers',
+                        teamColor: '#AA0000',
+                        number: '97',
+                        experience: '5ª temporada',
+                        height: '1.91 m',
+                        weight: '121 kg',
+                        age: 26,
+                        college: 'Ohio State',
+                        stats: {
+                            sacks: 18.5,
+                            tackles: 51,
+                            tfl: 19,
+                            forced_fumbles: 2,
+                            pressures: 78
+                        },
+                        maxStats: {
+                            sacks: 18.5,
+                            tackles: 51,
+                            tfl: 19,
+                            forced_fumbles: 2,
+                            pressures: 78
+                        },
+                        achievements: [
+                            'DPOY (2022)',
+                            '3x Pro Bowl',
+                            '2x Primer equipo All-Pro',
+                            'Novato Defensivo del Año (2019)'
+                        ]
+                    },
+                    {
+                        id: 6,
+                        name: 'Josh Allen',
+                        position: 'QB',
+                        team: 'Buffalo Bills',
+                        teamColor: '#00338D',
+                        number: '17',
+                        experience: '6ª temporada',
+                        height: '1.96 m',
+                        weight: '108 kg',
+                        age: 27,
+                        college: 'Wyoming',
+                        stats: {
+                            touchdowns: 36,
+                            yards: '4,407',
+                            interceptions: 14,
+                            rating: '96.6',
+                            completions: '359'
+                        },
+                        maxStats: {
+                            touchdowns: 38,
+                            yards: 4842,
+                            interceptions: 18,
+                            rating: 105.2,
+                            completions: 385
+                        },
+                        achievements: [
+                            '3x Pro Bowl',
+                            'Segundo equipo All-Pro (2020)',
+                            'Líder en TD en una temporada (Bills)'
+                        ]
+                    },
+                    {
+                        id: 7,
+                        name: 'Derrick Henry',
+                        position: 'RB',
+                        team: 'Tennessee Titans',
+                        teamColor: '#0C2340',
+                        number: '22',
+                        experience: '8ª temporada',
+                        height: '1.88 m',
+                        weight: '112 kg',
+                        age: 29,
+                        college: 'Alabama',
+                        stats: {
+                            touchdowns: 15,
+                            yards: '1,538',
+                            attempts: 349,
+                            yards_per_carry: '4.4',
+                            longest: '56'
+                        },
+                        maxStats: {
+                            touchdowns: 15,
+                            yards: 1538,
+                            attempts: 349,
+                            yards_per_carry: 4.4,
+                            longest: 56
+                        },
+                        achievements: [
+                            'OPOY (2020)',
+                            '2x Líder en yardas terrestres',
+                            '3x Pro Bowl',
+                            '2x Primer equipo All-Pro'
+                        ]
+                    },
+                    {
+                        id: 8,
+                        name: 'T.J. Watt',
+                        position: 'DEF',
+                        team: 'Pittsburgh Steelers',
+                        teamColor: '#FFB612',
+                        number: '90',
+                        experience: '7ª temporada',
+                        height: '1.91 m',
+                        weight: '115 kg',
+                        age: 29,
+                        college: 'Wisconsin',
+                        stats: {
+                            sacks: 16.0,
+                            tackles: 48,
+                            tfl: 17,
+                            forced_fumbles: 4,
+                            pressures: 68
+                        },
+                        maxStats: {
+                            sacks: 18.5,
+                            tackles: 51,
+                            tfl: 19,
+                            forced_fumbles: 4,
+                            pressures: 78
+                        },
+                        achievements: [
+                            'DPOY (2021)',
+                            '5x Pro Bowl',
+                            '4x Primer equipo All-Pro',
+                            'Líder en sacks (2021)'
+                        ]
+                    },
+                    {
+                        id: 9,
+                        name: 'Travis Kelce',
+                        position: 'TE',
+                        team: 'Kansas City Chiefs',
+                        teamColor: '#E31837',
+                        number: '87',
+                        experience: '11ª temporada',
+                        height: '1.96 m',
+                        weight: '113 kg',
+                        age: 34,
+                        college: 'Cincinnati',
+                        stats: {
+                            touchdowns: 12,
+                            yards: '1,338',
+                            receptions: 110,
+                            yards_after_catch: '487',
+                            longest: '53'
+                        },
+                        maxStats: {
+                            touchdowns: 14,
+                            yards: 1809,
+                            receptions: 128,
+                            yards_after_catch: 643,
+                            longest: 76
+                        },
+                        achievements: [
+                            '8x Pro Bowl',
+                            '4x Primer equipo All-Pro',
+                            '2x Super Bowl',
+                            'Récord de más temporadas con 1000+ yardas (TE)'
+                        ]
+                    }
+                ],
+                init() {
+                    // Obtener el tema guardado o detectar la preferencia del sistema
+                    const savedTheme = localStorage.getItem('theme');
+                    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    
+                    this.isDark = savedTheme ? savedTheme === 'dark' : systemPrefersDark;
+                    
+                    // Aplicar el tema al inicializar
+                    this.applyTheme();
+                },
+                toggleTheme() {
+                    this.isDark = !this.isDark;
+                    this.applyTheme();
+                    localStorage.setItem('theme', this.isDark ? 'dark' : 'light');
+                },
+                applyTheme() {
+                    if (this.isDark) {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
+                },
+                openModal(player) {
+                    this.selectedPlayer = player;
+                    this.isModalOpen = true;
+                },
+                get filteredPlayers() {
+                    if (this.selectedPosition === 'all') return this.players;
+                    return this.players.filter(player => player.position === this.selectedPosition);
+                },
+                get qbLeaders() {
+                    return this.players
+                        .filter(p => p.position === 'QB')
+                        .sort((a, b) => b.stats.yards - a.stats.yards)
+                        .slice(0, 3);
+                },
+                get wrLeaders() {
+                    return this.players
+                        .filter(p => p.position === 'WR')
+                        .sort((a, b) => b.stats.yards - a.stats.yards)
+                        .slice(0, 3);
+                },
+                get rbLeaders() {
+                    return this.players
+                        .filter(p => p.position === 'RB')
+                        .sort((a, b) => b.stats.yards - a.stats.yards)
+                        .slice(0, 3);
+                },
+                get maxQbYards() {
+                    return Math.max(...this.qbLeaders.map(qb => qb.stats.yards));
+                },
+                get maxWrYards() {
+                    return Math.max(...this.wrLeaders.map(wr => wr.stats.yards));
+                },
+                get maxRbYards() {
+                    return Math.max(...this.rbLeaders.map(rb => rb.stats.yards));
+                }
+            }
+        }
+
+        // Barra de progreso de lectura
+        window.addEventListener('scroll', function() {
+            const winHeight = window.innerHeight;
+            const docHeight = document.documentElement.scrollHeight;
+            const scrollTop = window.pageYOffset;
+            const trackLength = docHeight - winHeight;
+            const progress = Math.floor((scrollTop / trackLength) * 100);
+            document.getElementById('reading-progress').style.width = progress + '%';
+        });
+
+        // Inicializar el tema al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ya está manejado por Alpine.js, pero por si acaso
+            const savedTheme = localStorage.getItem('theme');
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const isDark = savedTheme ? savedTheme === 'dark' : systemPrefersDark;
+            
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+            
+            // Animar barras de estadísticas
+            setTimeout(() => {
+                document.querySelectorAll('.stat-progress').forEach(bar => {
+                    bar.style.width = '0';
+                    setTimeout(() => {
+                        bar.style.width = bar.style.width;
+                    }, 50);
+                });
+            }, 500);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guía de Fantasy Football | NFL Blog</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        nfl: {
+                            blue: '#013369',
+                            red: '#D50A0A',
+                            silver: '#A5ACAF'
+                        },
+                        neutral: {
+                            850: '#1e1e1e',
+                            950: '#0f0f0f'
+                        }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .article-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .article-card:hover {
+            transform: translateY(-5px);
+        }
+        .guide-section {
+            transition: all 0.3s ease;
+        }
+        .guide-section:hover {
+            transform: translateY(-2px);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #013369 0%, #D50A0A 100%);
+        }
+        .prose {
+            max-width: none;
+        }
+        .prose h2 {
+            font-weight: 700;
+            font-size: 1.5em;
+            margin-top: 2em;
+            margin-bottom: 1em;
+            color: #013369;
+        }
+        .dark .prose h2 {
+            color: #D50A0A;
+        }
+        .prose p {
+            margin-bottom: 1.25em;
+            line-height: 1.7;
+        }
+        .theme-transition * {
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+        .reading-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 4px;
+            background: linear-gradient(90deg, #013369, #D50A0A);
+            z-index: 9999;
+        }
+        .strategy-card {
+            transition: all 0.3s ease;
+        }
+        .strategy-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .dark .strategy-card:hover {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+        }
+        .player-rank {
+            transition: background-color 0.3s ease;
+        }
+        .player-rank:hover {
+            background-color: #f3f4f6;
+        }
+        .dark .player-rank:hover {
+            background-color: #374151;
+        }
+        .tier-badge {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 24px;
+            font-weight: bold;
+            font-size: 0.75rem;
+            color: white;
+        }
+        .tab-button {
+            transition: all 0.3s ease;
+        }
+        .tab-button.active {
+            border-bottom: 3px solid #D50A0A;
+        }
+        .dark .tab-button.active {
+            border-bottom: 3px solid #013369;
+        }
+        .draft-icon {
+            background: linear-gradient(135deg, #013369 0%, #D50A0A 100%);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+        .tooltip {
+            position: relative;
+        }
+        .tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 5px 10px;
+            background-color: #333;
+            color: white;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body x-data="fantasyGuide()" x-bind:class="{'dark': isDark}" class="theme-transition bg-white dark:bg-neutral-950 text-gray-800 dark:text-gray-200 min-h-screen">
+    <!-- Barra de progreso de lectura -->
+    <div class="reading-progress" id="reading-progress"></div>
+
+    <!-- Navegación fija -->
+    <nav class="fixed w-full bg-white/90 dark:bg-neutral-850/90 backdrop-blur-sm py-4 z-50 border-b border-gray-200 dark:border-neutral-700 shadow-sm">
+        <div class="container mx-auto px-4 flex justify-between items-center">
+            <a href="index.html" class="text-2xl font-bold text-nfl-blue dark:text-white flex items-center">
+                <i class="fas fa-football mr-2"></i>NFL Blog
+            </a>
+            
+            <div class="flex items-center space-x-6">
+                <a href="../index.html#inicio" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Inicio</a>
+                <a href="equipos-nfl.html" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Equipos</a>
+                <a href="jugadores-destacados.html" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Jugadores</a>
+                <a href="index.html#articulos" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Artículos</a>
+                <a href="calendario-resultados.html" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-white font-medium">Calendario</a>
+                
+                <!-- Selector de tema -->
+                <div class="flex items-center space-x-2">
+                    <span x-show="!isDark"><i class="fas fa-sun text-yellow-500"></i></span>
+                    <span x-show="isDark"><i class="fas fa-moon text-blue-300"></i></span>
+                    
+                    <button 
+                        @click="toggleTheme()"
+                        :aria-label="isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+                        class="w-12 h-6 bg-gray-300 dark:bg-nfl-blue rounded-full p-1 relative focus:outline-none focus:ring-2 focus:ring-nfl-blue"
+                    >
+                        <span class="w-4 h-4 bg-white dark:bg-gray-200 rounded-full shadow-md block transform transition-transform duration-300" :class="{'translate-x-6': isDark}"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Espacio para la navegación fija -->
+    <div class="h-20"></div>
+
+    <!-- Contenido principal -->
+    <main class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Encabezado de la página -->
+        <div class="mb-12 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold text-nfl-blue dark:text-nfl-red mb-4">Guía de Fantasy Football 2023</h1>
+            <p class="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+                Todo lo que necesitas saber para dominar tu liga de Fantasy Football esta temporada. Desde el draft hasta el campeonato.
+            </p>
+        </div>
+
+        <!-- Navegación por secciones -->
+        <div class="mb-10 bg-white dark:bg-neutral-850 rounded-xl shadow-md p-4 sticky top-20 z-10">
+            <h2 class="text-lg font-semibold mb-3 text-nfl-blue dark:text-nfl-red">Navegar por la guía</h2>
+            <div class="flex flex-wrap gap-2">
+                <a href="#introduccion" class="px-3 py-1 bg-gray-100 dark:bg-neutral-800 hover:bg-nfl-blue hover:text-white dark:hover:bg-nfl-blue rounded-full text-sm transition">Introducción</a>
+                <a href="#estrategias-draft" class="px-3 py-1 bg-gray-100 dark:bg-neutral-800 hover:bg-nfl-blue hover:text-white dark:hover:bg-nfl-blue rounded-full text-sm transition">Estrategias de Draft</a>
+                <a href="#jugadores-destacados" class="px-3 py-1 bg-gray-100 dark:bg-neutral-800 hover:bg-nfl-blue hover:text-white dark:hover:bg-nfl-blue rounded-full text-sm transition">Jugadores Destacados</a>
+                <a href="#gestion-equipo" class="px-3 py-1 bg-gray-100 dark:bg-neutral-800 hover:bg-nfl-blue hover:text-white dark:hover:bg-nfl-blue rounded-full text-sm transition">Gestión de Equipo</a>
+                <a href="#consejos" class="px-3 py-1 bg-gray-100 dark:bg-neutral-800 hover:bg-nfl-blue hover:text-white dark:hover:bg-nfl-blue rounded-full text-sm transition">Consejos Semanales</a>
+            </div>
+        </div>
+
+        <!-- Introducción -->
+        <section id="introduccion" class="mb-16 guide-section">
+            <div class="bg-gradient-to-r from-nfl-blue to-nfl-red rounded-2xl p-8 text-white shadow-xl mb-8">
+                <h2 class="text-2xl font-bold mb-4">¿Qué es el Fantasy Football?</h2>
+                <p class="mb-4">El Fantasy Football es un juego donde los participantes actúan como dueños de equipos virtuales formados por jugadores reales de la NFL. Estos jugadores ganan puntos basados en su desempeño real en los partidos.</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center mt-6">
+                    <div>
+                        <div class="text-2xl font-bold">60M+</div>
+                        <div class="text-sm">Jugadores en EE.UU. y Canadá</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold">$18B</div>
+                        <div class="text-sm">En apuestas anuales</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold">73%</div>
+                        <div class="text-sm">De los jugadores ven más NFL</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white dark:bg-neutral-850 p-6 rounded-xl shadow-md border border-gray-100 dark:border-neutral-700">
+                    <h3 class="text-xl font-semibold mb-4 text-nfl-blue dark:text-nfl-red">Tipos de Ligas</h3>
+                    <ul class="space-y-3">
+                        <li class="flex items-start">
+                            <span class="draft-icon mr-3"><i class="fas fa-redo"></i></span>
+                            <div>
+                                <h4 class="font-semibold">Redraft</h4>
+                                <p class="text-sm text-gray-600 dark:text-gray-300">Cada temporada se realiza un nuevo draft desde cero.</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start mt-4">
+                            <span class="draft-icon mr-3"><i class="fas fa-infinity"></i></span>
+                            <div>
+                                <h4 class="font-semibold">Keeper/Dynasty</h4>
+                                <p class="text-sm text-gray-600 dark:text-gray-300">Mantienes jugadores de una temporada a otra.</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start mt-4">
+                            <span class="draft-icon mr-3"><i class="fas fa-bolt"></i></span>
+                            <div>
+                                <h4 class="font-semibold">Daily Fantasy</h4>
+                                <p class="text-sm text-gray-600 dark:text-gray-300">Ligas de una semana con salarios virtuales.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="bg-white dark:bg-neutral-850 p-6 rounded-xl shadow-md border border-gray-100 dark:border-neutral-700">
+                    <h3 class="text-xl font-semibold mb-4 text-nfl-blue dark:text-nfl-red">Sistemas de Puntuación</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <h4 class="font-semibold">Standard</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">4 pts por TD pase, 6 pts por TD terrestre/recepción, 1 pt por 25 yardas de pase, 10 yardas terrestres/recepción.</p>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold">PPR (Point Per Reception)</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">Igual que Standard pero con 1 punto adicional por cada recepción.</p>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold">Half-PPR</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">0.5 puntos por recepción, un punto intermedio entre Standard y PPR.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Estrategias de Draft -->
+        <section id="estrategias-draft" class="mb-16 guide-section">
+            <h2 class="text-3xl font-bold mb-8 text-nfl-blue dark:text-nfl-red">Estrategias de Draft</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div class="strategy-card bg-white dark:bg-neutral-850 p-6 rounded-xl shadow-md border border-gray-100 dark:border-neutral-700">
+                    <div class="flex items-center mb-4">
+                        <span class="draft-icon mr-3"><i class="fas fa-crown"></i></span>
+                        <h3 class="text-xl font-semibold">Zero RB</h3>
+                    </div>
+                    <p class="mb-4">Enfócate en receptores y tight ends en las primeras rondas, posponiendo la selección de corredores hasta rondas medias o tardías.</p>
+                    <ul class="list-disc pl-5 text-sm text-gray-600 dark:text-gray-300">
+                        <li>Ideal para formatos PPR</li>
+                        <li>Mayor énfasis en receptores</li>
+                        <li>Buscar RBs laterales con potencial</li>
+                    </ul>
+                </div>
+
+                <div class="strategy-card bg-white dark:bg-neutral-850 p-6 rounded-xl shadow-md border border-gray-100 dark:border-neutral-700">
+                    <div class="flex items-center mb-4">
+                        <span class="draft-icon mr-3"><i class="fas fa-running"></i></span>
+                        <h3 class="text-xl font-semibold">Hero RB</h3>
+                    </div>
+                    <p class="mb-4">Selecciona un corredor elite en la primera ronda y luego te enfocas en receptores antes de seleccionar tu segundo corredor.</p>
+                    <ul class="list-disc pl-5 text-sm text-gray-600 dark:text-gray-300">
+                        <li>Balance entre RB y WR</li>
+                        <li>Un RB de trabajo pesado</li>
+                        <li>Depth en receptores</li>
+                    </ul>
+                </div>
+
+                <div class="strategy-card bg-white dark:bg-neutral-850 p-6 rounded-xl shadow-md border border-gray-100 dark:border-neutral-700">
+                    <div class="flex items-center mb-4">
+                        <span class="draft-icon mr-3"><i class="fas fa-exchange-alt"></i></span>
+                        <h3 class="text-xl font-semibold">Late-Round QB</h3>
+                    </div>
+                    <p class="mb-4">Posponer la selección de mariscal de campo hasta las rondas finales mientras acumulas talento en otras posiciones.</p>
+                    <ul class="list-disc pl-5 text-sm text-gray-600 dark:text-gray-300">
+                        <li>Prioriza RB, WR y TE</li>
+                        <li>Excelente para profundidad</li>
+                        <li>Buscar QBs con alto upside</li>
+                    </ul>
+                </div>
+
+                <div class="strategy-card bg-white dark:bg-neutral-850 p-6 rounded-xl shadow-md border border-gray-100 dark:border-neutral-700">
+                    <div class="flex items-center mb-4">
+                        <span class="draft-icon mr-3"><i class="fas fa-chess"></i></span>
+                        <h3 class="text-xl font-semibold">Best Player Available</h3>
+                    </div>
+                    <p class="mb-4">Selecciona siempre al mejor jug disponible sin importar la posición, llenando necesidades más tarde en el draft.</p>
+                    <ul class="list-disc pl-5 text-sm text-gray-600 dark:text-gray-300">
+                        <li>Máximo valor en cada pick</li>
+                        <li>Flexible con necesidades</li>
+                        <li>Requiere adaptabilidad</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-neutral-850 rounded-xl shadow-md p-6 border border-gray-100 dark:border-neutral-700">
+                <h3 class="text-xl font-semibold mb-4 text-nfl-blue dark:text-nfl-red">Estrategia por Posición en el Draft</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b border-gray-200 dark:border-neutral-700">
+                                <th class="text-left py-3">Rondas</th>
+                                <th class="text-left py-3">Estrategia Recomendada</th>
+                                <th class="text-left py-3">Posiciones Prioridad</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b border-gray-100 dark:border-neutral-800">
+                                <td class="py-3 font-semibold">1-3</td>
+                                <td class="py-3">Establecer base con jugadores elite</td>
+                                <td class="py-3">RB, WR, TE premium</td>
+                            </tr>
+                            <tr class="border-b border-gray-100 dark:border-neutral-800">
+                                <td class="py-3 font-semibold">4-6</td>
+                                <td class="py-3">Llenar necesidades y buscar value</td>
+                                <td class="py-3">WR, RB, QB (si hay value)</td>
+                            </tr>
+                            <tr class="border-b border-gray-100 dark:border-neutral-800">
+                                <td class="py-3 font-semibold">7-9</td>
+                                <td class="py-3">High-upside players y depth</td>
+                                <td class="py-3">WR, RB, TE</td>
+                            </tr>
+                            <tr>
+                                <td class="py-3 font-semibold">10+</td>
+                                <td class="py-3">Lottery tickets y sleepers</td>
+                                <td class="py-3">RB, WR, DEF, K</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Jugadores Destacados -->
+        <section id="jugadores-destacados" class="mb-16 guide-section">
+            <h2 class="text-3xl font-bold mb-8 text-nfl-blue dark:text-nfl-red">Jugadores Destacados 2023</h2>
+            
+            <div class="mb-6 flex border-b border-gray-200 dark:border-neutral-700">
+                <button 
+                    @click="activePosition = 'RB'" 
+                    :class="{'active': activePosition === 'RB', 'text-nfl-blue dark:text-nfl-red': activePosition === 'RB'}"
+                    class="tab-button px-6 py-3 font-medium"
+                >
+                    Corredores
+                </button>
+                <button 
+                    @click="activePosition = 'WR'" 
+                    :class="{'active': activePosition === 'WR', 'text-nfl-blue dark:text-nfl-red': activePosition === 'WR'}"
+                    class="tab-button px-6 py-3 font-medium"
+                >
+                    Receptores
+                </button>
+                <button 
+                    @click="activePosition = 'QB'" 
+                    :class="{'active': activePosition === 'QB', 'text-nfl-blue dark:text-nfl-red': activePosition === 'QB'}"
+                    class="tab-button px-6 py-3 font-medium"
+                >
+                    Quarterbacks
+                </button>
+                <button 
+                    @click="activePosition = 'TE'" 
+                    :class="{'active': activePosition === 'TE', 'text-nfl-blue dark:text-nfl-red': activePosition === 'TE'}"
+                    class="tab-button px-6 py-3 font-medium"
+                >
+                    Tight Ends
+                </button>
+            </div>
+
+            <div class="bg-white dark:bg-neutral-850 rounded-xl shadow-md overflow-hidden">
+                <div class="p-6">
+                    <h3 class="text-xl font-semibold mb-4 text-nfl-blue dark:text-nfl-red" x-text="'Top ' + activePosition + 's para 2023'"></h3>
+                    
+                    <div class="space-y-3">
+                        <template x-for="player in getPlayersByPosition(activePosition)" :key="player.id">
+                            <div class="player-rank flex items-center justify-between p-3 border-b border-gray-100 dark:border-neutral-800 last:border-b-0">
+                                <div class="flex items-center">
+                                    <span class="tier-badge mr-3" :class="{
+                                        'bg-purple-600': player.tier === 1,
+                                        'bg-red-600': player.tier === 2,
+                                        'bg-orange-500': player.tier === 3,
+                                        'bg-yellow-500': player.tier === 4,
+                                        'bg-green-500': player.tier === 5
+                                    }" x-text="player.tier"></span>
+                                    <div>
+                                        <div class="font-semibold" x-text="player.name"></div>
+                                        <div class="text-sm text-gray-500 dark:text-gray-400" x-text="player.team + ' - ADP: ' + player.adp"></div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="font-semibold" x-text="'Ronda ' + player.round"></div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400" x-text="player.bye"></div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white dark:bg-neutral-850 p-6 rounded-xl shadow-md border border-gray-100 dark:border-neutral-700">
+                    <h3 class="text-xl font-semibold mb-4 text-nfl-blue dark:text-nfl-red">Sleepers 2023</h3>
+                    <ul class="space-y-3">
+                        <li class="flex justify-between items-center">
+                            <span class="font-semibold">James Cook</span>
+                            <span class="text-sm bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 px-2 py-1 rounded">RB - BUF</span>
+                        </li>
+                        <li class="flex justify-between items-center">
+                            <span class="font-semibold">Jahan Dotson</span>
+                            <span class="text-sm bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 px-2 py-1 rounded">WR - WSH</span>
+                        </li>
+                        <li class="flex justify-between items-center">
+                            <span class="font-semibold">Sam LaPorta</span>
+                            <span class="text-sm bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 px-2 py-1 rounded">TE - DET</span>
+                        </li>
+                        <li class="flex justify-between items-center">
+                            <span class="font-semibold">Anthony Richardson</span>
+                            <span class="text-sm bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 px-2 py-1 rounded">QB - IND</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="bg-white dark:bg-neutral-850 p-6 rounded-xl shadow-md border border-gray-100 dark:border-neutral-700">
+                    <h3 class="text-xl font-semibold mb-4 text-nfl-blue dark:text-nfl-red">Busts Potenciales 2023</h3>
+                    <ul class="space-y-3">
+                        <li class="flex justify-between items-center">
+                            <span class="font-semibold">Najee Harris</span>
+                            <span class="text-sm bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 px-2 py-1 rounded">RB - PIT</span>
+                        </li>
+                        <li class="flex justify-between items-center">
+                            <span class="font-semibold">DK Metcalf</span>
+                            <span class="text-sm bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 px-2 py-1 rounded">WR - SEA</span>
+                        </li>
+                        <li class="flex justify-between items-center">
+                            <span class="font-semibold">Kyle Pitts</span>
+                            <span class="text-sm bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 px-2 py-1 rounded">TE - ATL</span>
+                        </li>
+                        <li class="flex justify-between items-center">
+                            <span class="font-semibold">Daniel Jones</span>
+                            <span class="text-sm bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 px-2 py-1 rounded">QB - NYG</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Gestión de Equipo -->
+        <section id="gestion-equipo" class="mb-16 guide-section">
+            <h2 class="text-3xl font-bold mb-8 text-nfl-blue dark:text-nfl-red">Gestión de Equipo Durante la Temporada</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="strategy-card bg-white dark:bg-neutral-850 p-6 rounded-xl shadow-md border border-gray-100 dark:border-neutral-700">
+                    <div class="flex items-center mb-4">
+                        <span class="draft-icon mr-3"><i class="fas fa-exchange-alt"></i></span>
+                        <h3 class="text-xl font-semibold">Waiver Wire</h3>
+                    </div>
+                    <p class="mb-4">La adquisición de jugadores mediante waiver wire es crucial durante la temporada.</p>
+                    <ul class="list-disc pl-5 text-sm text-gray-600 dark:text-gray-300">
+                        <li>Revisar waivers semanalmente</li>
+                        <li>Priorizar necesidades</li>
+                        <li>Ver jugadores con mayor upside</li>
+                        <li>Considerar horarios de waivers</li>
+                    </ul>
+                </div>
+
+                <div class="strategy-card bg-white dark:bg-neutral-850 p-6 rounded-xl shadow-md border border-gray-100 dark:border-neutral-700">
+                    <div class="flex items-center mb-4">
+                        <span class="draft-icon mr-3"><i class="fas fa-handshake"></i></span>
+                        <h3 class="text-xl font-semibold">Trades</h3>
+                    </div>
+                    <p class="mb-4">Los intercambios pueden mejorar tu equipo si se hacen estratégicamente.</p>
+                    <ul class="list-disc pl-5 text-sm text-gray-600 dark:text-gray-300">
+                        <li>Vender alto, comprar bajo</li>
+                        <li>Identificar necesidades de otros</li>
+                        <li>Analizar schedules futuros</li>
+                        <li>No sobrevalorar tus jugadores</li>
+                    </ul>
+                </div>
+
+                <div class="strategy-card bg-white dark:bg-neutral-850 p-6 rounded-xl shadow-md border border-gray-100 dark:border-neutral-700">
+                    <div class="flex items-center mb-4">
+                        <span class="draft-icon mr-3"><i class="fas fa-chart-line"></i></span>
+                        <h3 class="text-xl font-semibold">Análisis de Matchups</h3>
+                    </div>
+                    <p class="mb-4">Estudiar los matchups semanales es clave para las decisiones de alineación.</p>
+                    <ul class="list-disc pl-5 text-sm text-gray-600 dark:text-gray-300">
+                        <li>Defensas vs posición</li>
+                        <li>Juegos en domo vs exterior</li>
+                        <li>Favoritos vs underdogs</li>
+                        <li>Velocidad de juego</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-neutral-850 rounded-xl shadow-md p-6 border border-gray-100 dark:border-neutral-700">
+                <h3 class="text-xl font-semibold mb-4 text-nfl-blue dark:text-nfl-red">Estrategias por Posición Durante la Temporada</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b border-gray-200 dark:border-neutral-700">
+                                <th class="text-left py-3">Posición</th>
+                                <th class="text-left py-3">Estrategia</th>
+                                <th class="text-left py-3">Consideraciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b border-gray-100 dark:border-neutral-800">
+                                <td class="py-3 font-semibold">QB</td>
+                                <td class="py-3">Streaming según matchups</td>
+                                <td class="py-3">Defensas débiles vs pase, juegos con alto total de puntos</td>
+                            </tr>
+                            <tr class="border-b border-gray-100 dark:border-neutral-800">
+                                <td class="py-3 font-semibold">RB</td>
+                                <td class="py-3">Handcuffing de tus corredores estrella</td>
+                                <td class="py-3">Backups importantes, situaciones de committee</td>
+                            </tr>
+                            <tr class="border-b border-gray-100 dark:border-neutral-800">
+                                <td class="py-3 font-semibold">WR</td>
+                                <td class="py-3">Target share consistente</td>
+                                <td class="py-3">Porcentaje de targets, red zone targets, esquemas ofensivos</td>
+                            </tr>
+                            <tr>
+                                <td class="py-3 font-semibold">TE</td>
+                                <td class="py-3">Priorizar tight ends con alto volumen</td>
+                                <td class="py-3">Targets en zona de anotación, dependencia ofensiva</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Consejos Semanales -->
+        <section id="consejos" class="mb-16 guide-section">
+            <h2 class="text-3xl font-bold mb-8 text-nfl-blue dark:text-nfl-red">Consejos Semanales</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white dark:bg-neutral-850 p-6 rounded-xl shadow-md border border-gray-100 dark:border-neutral-700">
+                    <h3 class="text-xl font-semibold mb-4 text-nfl-blue dark:text-nfl-red">Start/Sit Decisions</h3>
+                    <p class="mb-4">Cómo tomar las decisiones correctas cada semana:</p>
+                    <ul class="list-disc pl-5 space-y-2">
+                        <li>No sobrepienses con tus estrellas</li>
+                        <li>Considera matchups sobre reputación</li>
+                        <li>Mira tendencias recientes, no solo la temporada completa</li>
+                        <li>Verifica lesiones y reports de práctica</li>
+                        <li>Considera factores climáticos en juegos exteriores</li>
+                    </ul>
+                </div>
+
+                <div class="bg-white dark:bg-neutral-850 p-6 rounded-xl shadow-md border border-gray-100 dark:border-neutral-700">
+                    <h3 class="text-xl font-semibold mb-4 text-nfl-blue dark:text-nfl-red">Waiver Wire Priorities</h3>
+                    <p class="mb-4">Qué buscar cada semana en waivers:</p>
+                    <ul class="list-disc pl-5 space-y-2">
+                        <li>Jugadores con aumento de oportunidades</li>
+                        <li>Handcuffs de corredores lesionados</li>
+                        <li>Receptores con matchups favorables próximos</li>
+                        <li>Defensas con buenos matchups</li>
+                        <li>Lottery tickets para el final del roster</li>
+                    </ul>
+                </div>
+
+                <div class="bg-white dark:bg-neutral-850 p-6 rounded-xl shadow-md border border-gray-100 dark:border-neutral-700">
+                    <h3 class="text-xl font-semibold mb-4 text-nfl-blue dark:text-nfl-red">Preparación para Playoffs</h3>
+                    <p class="mb-4">Estrategias para asegurar tu camino al campeonato:</p>
+                    <ul class="list-disc pl-5 space-y-2">
+                        <li>Revisa schedules de playoffs con anticipación</li>
+                        <li>Acumula jugadores con buenos matchups en semanas 15-17</li>
+                        <li>Considera handcuffs para tus corredores importantes</li>
+                        <li>No tengas miedo de hacer trades para mejorar tu equipo para playoffs</li>
+                        <li>Mantén un spot roster para defensas streamings</li>
+                    </ul>
+                </div>
+
+                <div class="bg-white dark:bg-neutral-850 p-6 rounded-xl shadow-md border border-gray-100 dark:border-neutral-700">
+                    <h3 class="text-xl font-semibold mb-4 text-nfl-blue dark:text-nfl-red">Recursos Recomendados</h3>
+                    <p class="mb-4">Las mejores herramientas para tener ventaja:</p>
+                    <ul class="list-disc pl-5 space-y-2">
+                        <li>Twitter para updates de lesiones en tiempo real</li>
+                        <li>Podcasts de fantasy football diarios</li>
+                        <li>Herramientas de análisis de matchups</li>
+                        <li>Sitios con rankings consensuados</li>
+                        <li>Apps con alertas de noticias</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Newsletter -->
+        <section class="mb-16">
+            <div class="gradient-bg rounded-2xl p-8 text-center text-white shadow-xl">
+                <h2 class="text-2xl font-bold mb-4">¡No te pierdas nuestros tips semanales!</h2>
+                <p class="mb-6">Suscríbete a nuestro newsletter de Fantasy Football y recibe análisis, consejos de waivers y decisiones de start/sit directamente en tu correo.</p>
+                <div class="flex flex-col sm:flex-row max-w-md mx-auto gap-2">
+                    <input type="email" placeholder="Tu correo electrónico" class="flex-grow px-4 py-2 rounded-full text-gray-900 focus:outline-none focus:ring-2 focus:ring-white">
+                    <button class="bg-white text-nfl-blue font-bold px-6 py-2 rounded-full hover:bg-gray-100 transition">Suscribirme</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-100 dark:bg-neutral-850 border-t border-gray-200 dark:border-neutral-700 py-12 mt-16">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center">
+                        <i class="fas fa-football mr-2 text-nfl-blue dark:text-nfl-red"></i>NFL Blog
+                    </h3>
+                    <p class="text-gray-600 dark:text-gray-300 text-sm">
+                        Tu fuente confiable de noticias, análisis y estadísticas de la National Football League.
+                    </p>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Secciones</h4>
+                    <ul class="space-y-2">
+                        <li><a href="index.html#inicio" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Inicio</a></li>
+                        <li><a href="equipos-nfl.html" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Equipos</a></li>
+                        <li><a href="jugadores-destacados.html" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Jugadores</a></li>
+                        <li><a href="index.html#articulos" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Artículos</a></li>
+                        <li><a href="calendario-resultados.html" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Calendario</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Fantasy Football</h4>
+                    <ul class="space-y-2">
+                        <li><a href="fantasy-football-guia.html" class="text-nfl-blue dark:text-nfl-red text-sm">Guía de Fantasy</a></li>
+                        <li><a href="#" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Rankings Semanales</a></li>
+                        <li><a href="#" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Waiver Wire</a></li>
+                        <li><a href="#" class="text-gray-600 dark:text-gray-300 hover:text-nfl-blue dark:hover:text-nfl-red text-sm">Start/Sit</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Síguenos</h4>
+                    <div class="flex space-x-4 mb-6">
+                        <a href="#" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-nfl-red">
+                            <i class="fab fa-twitter text-lg"></i>
+                        </a>
+                        <a href="#" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-nfl-red">
+                            <i class="fab fa-facebook text-lg"></i>
+                        </a>
+                        <a href="#" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-nfl-red">
+                            <i class="fab fa-instagram text-lg"></i>
+                        </a>
+                        <a href="#" class="text-gray-600 hover:text-nfl-blue dark:text-gray-300 dark:hover:text-nfl-red">
+                            <i class="fab fa-youtube text-lg"></i>
+                        </a>
+                    </div>
+                    
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">Newsletter</h4>
+                    <div class="flex">
+                        <input type="email" placeholder="Tu email" class="px-3 py-2 border border-gray-300 dark:border-neutral-700 rounded-l text-sm w-full dark:bg-neutral-800">
+                        <button class="bg-nfl-blue text-white px-3 py-2 rounded-r text-sm">Suscribir</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-8 text-center text-gray-500 dark:text-gray-400 text-sm">
+                <p>© 2023 NFL Blog. Este sitio no está afiliado oficialmente con la NFL. Todas las marcas registradas son propiedad de sus respectivos dueños.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Función para gestionar la guía de Fantasy Football
+        function fantasyGuide() {
+            return {
+                isDark: false,
+                activePosition: 'RB',
+                players: [
+                    // Running Backs
+                    { id: 1, name: 'Christian McCaffrey', position: 'RB', team: 'SF', tier: 1, round: 1, adp: '1.2', bye: '9' },
+                    { id: 2, name: 'Austin Ekeler', position: 'RB', team: 'LAC', tier: 1, round: 1, adp: '2.8', bye: '5' },
+                    { id: 3, name: 'Saquon Barkley', position: 'RB', team: 'NYG', tier: 1, round: 1, adp: '3.5', bye: '13' },
+                    { id: 4, name: 'Jonathan Taylor', position: 'RB', team: 'IND', tier: 2, round: 2, adp: '4.1', bye: '11' },
+                    { id: 5, name: 'Bijan Robinson', position: 'RB', team: 'ATL', tier: 2, round: 2, adp: '5.3', bye: '11' },
+                    { id: 6, name: 'Nick Chubb', position: 'RB', team: 'CLE', tier: 2, round: 2, adp: '6.7', bye: '5' },
+                    
+                    // Wide Receivers
+                    { id: 7, name: 'Justin Jefferson', position: 'WR', team: 'MIN', tier: 1, round: 1, adp: '1.1', bye: '13' },
+                    { id: 8, name: 'Ja\'Marr Chase', position: 'WR', team: 'CIN', tier: 1, round: 1, adp: '1.3', bye: '7' },
+                    { id: 9, name: 'Tyreek Hill', position: 'WR', team: 'MIA', tier: 1, round: 1, adp: '1.4', bye: '10' },
+                    { id: 10, name: 'Stefon Diggs', position: 'WR', team: 'BUF', tier: 2, round: 2, adp: '2.1', bye: '13' },
+                    { id: 11, name: 'CeeDee Lamb', position: 'WR', team: 'DAL', tier: 2, round: 2, adp: '2.3', bye: '7' },
+                    { id: 12, name: 'A.J. Brown', position: 'WR', team: 'PHI', tier: 2, round: 2, adp: '2.5', bye: '10' },
+                    
+                    // Quarterbacks
+                    { id: 13, name: 'Patrick Mahomes', position: 'QB', team: 'KC', tier: 1, round: 3, adp: '3.2', bye: '10' },
+                    { id: 14, name: 'Josh Allen', position: 'QB', team: 'BUF', tier: 1, round: 3, adp: '3.4', bye: '13' },
+                    { id: 15, name: 'Jalen Hurts', position: 'QB', team: 'PHI', tier: 1, round: 3, adp: '3.6', bye: '10' },
+                    { id: 16, name: 'Lamar Jackson', position: 'QB', team: 'BAL', tier: 2, round: 5, adp: '5.1', bye: '13' },
+                    { id: 17, name: 'Joe Burrow', position: 'QB', team: 'CIN', tier: 2, round: 5, adp: '5.4', bye: '7' },
+                    { id: 18, name: 'Justin Herbert', position: 'QB', team: 'LAC', tier: 2, round: 6, adp: '6.2', bye: '5' },
+                    
+                    // Tight Ends
+                    { id: 19, name: 'Travis Kelce', position: 'TE', team: 'KC', tier: 1, round: 1, adp: '1.5', bye: '10' },
+                    { id: 20, name: 'Mark Andrews', position: 'TE', team: 'BAL', tier: 2, round: 4, adp: '4.3', bye: '13' },
+                    { id: 21, name: 'T.J. Hockenson', position: 'TE', team: 'MIN', tier: 3, round: 5, adp: '5.2', bye: '13' },
+                    { id: 22, name: 'Dallas Goedert', position: 'TE', team: 'PHI', tier: 3, round: 7, adp: '7.1', bye: '10' },
+                    { id: 23, name: 'Kyle Pitts', position: 'TE', team: 'ATL', tier: 4, round: 8, adp: '8.3', bye: '11' },
+                    { id: 24, name: 'Darren Waller', position: 'TE', team: 'NYG', tier: 4, round: 8, adp: '8.5', bye: '13' }
+                ],
+                init() {
+                    // Obtener el tema guardado o detectar la preferencia del sistema
+                    const savedTheme = localStorage.getItem('theme');
+                    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    
+                    this.isDark = savedTheme ? savedTheme === 'dark' : systemPrefersDark;
+                    
+                    // Aplicar el tema al inicializar
+                    this.applyTheme();
+                },
+                toggleTheme() {
+                    this.isDark = !this.isDark;
+                    this.applyTheme();
+                    localStorage.setItem('theme', this.isDark ? 'dark' : 'light');
+                },
+                applyTheme() {
+                    if (this.isDark) {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
+                },
+                getPlayersByPosition(position) {
+                    return this.players.filter(player => player.position === position);
+                }
+            }
+        }
+
+        // Barra de progreso de lectura
+        window.addEventListener('scroll', function() {
+            const winHeight = window.innerHeight;
+            const docHeight = document.documentElement.scrollHeight;
+            const scrollTop = window.pageYOffset;
+            const trackLength = docHeight - winHeight;
+            const progress = Math.floor((scrollTop / trackLength) * 100);
+            document.getElementById('reading-progress').style.width = progress + '%';
+        });
+
+        // Inicializar el tema al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ya está manejado por Alpine.js, pero por si acaso
+            const savedTheme = localStorage.getItem('theme');
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const isDark = savedTheme ? savedTheme === 'dark' : systemPrefersDark;
+            
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+    </script>
+</body>
+</html>
